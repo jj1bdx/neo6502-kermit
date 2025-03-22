@@ -61,6 +61,14 @@
 
 /* Feature Selection */
 
+/* For Neo6502 */
+#define NEO6502
+
+#ifdef NEO6502
+#define NO_LP /* Long packets too big for APF9 */
+#define FN_MAX 16
+#endif /* NEO6502 */
+
 /* XAC compiler for Philips XAG30 microprocessor */
 /* See http://www.columbia.edu/kermit/em-apex.html */
 
