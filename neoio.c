@@ -37,6 +37,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+
 #include <neo/api.h>
 
 #include "cdefs.h"
@@ -383,16 +384,3 @@ int closefile(struct k_data *k, UCHAR c, int mode) {
   }
   return (rc);
 }
-
-#ifdef DEBUG
-int xerror() {
-  unsigned int x;
-  extern int errorrate; /* Fix this - NO EXTERNS */
-  if (!errorrate)
-    return (0);
-  x = rand() % 100; /* Fix this - NO C LIBRARY */
-  debug(DB_LOG, "RANDOM", 0, x);
-  debug(DB_LOG, "ERROR", 0, (x < errorrate));
-  return (x < errorrate);
-}
-#endif /* DEBUG */

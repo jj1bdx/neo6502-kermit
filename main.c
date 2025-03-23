@@ -111,10 +111,6 @@ int check = 3; /* Block check */
 int check = 1;
 #endif          /* F_CRC */
 int remote = 1; /* 1 = Remote, 0 = Local */
-#ifdef DEBUG
-int errorrate = 0; /* Simulated error rate */
-int seed = 1234;   /* Random number generator seed */
-#endif             /* DEBUG */
 
 void doexit(int status) {
   devrestore(); /* Restore device */
@@ -168,10 +164,6 @@ int doarg(char c) { /* Command-line option parser */
 
   xp = *xargv + 1; /* Pointer for bundled args */
   while (c) {
-#ifdef DEBUG
-    if (errorrate)
-      seed += (int)c;
-#endif /* DEBUG) */
     switch (c) {
     case 'r': /* Receive */
       if (action)
@@ -190,10 +182,6 @@ int doarg(char c) { /* Command-line option parser */
       while (--xargc > 0) {           /* Traverse the list */
         xargv++;
         s = *xargv;
-#ifdef DEBUG
-        if (errorrate)
-          seed += (int)*s;
-#endif /* DEBUG) */
         if (**xargv == '-')
           break;
         errno = 0;
@@ -232,12 +220,6 @@ int doarg(char c) { /* Command-line option parser */
         check = atoi(*xargv);
         if (check < 1 || check > 5 || check == 4)
           fatal("Invalid block check", (char *)0, (char *)0);
-#ifdef DEBUG
-      } else if (c == 'E') {
-        errorrate = atoi(*xargv);
-        if (errorrate > 100)
-          fatal("Invalid error rate", (char *)0, (char *)0);
-#endif /* DEBUG */
       }
       break;
 
@@ -339,9 +321,6 @@ void main(int argc, char **argv) {
     debug(DB_OPN, "debug.log", 0, 0);
 
   debug(DB_MSG, "Initializing...", 0, 0);
-  debug(DB_LOG, "SIMULATED ERROR RATE:", 0, errorrate);
-  if (errorrate)
-    srand(seed); /* Init random error generator */
 
   /*  Fill in parameters for this run */
 

@@ -84,9 +84,6 @@ void STATIC decstr(UCHAR *, struct k_data *, struct k_response *);
 void STATIC encode(int, int, struct k_data *);
 int STATIC nxtpkt(struct k_data *);
 int STATIC resend(struct k_data *);
-#ifdef DEBUG
-int xerror(void);
-#endif /* DEBUG */
 
 int                            /* The kermit() function */
 kermit(short f,                /* Function code */
@@ -364,10 +361,6 @@ kermit(short f,                /* Function code */
   case 1:           /* Type 1, 6-bit checksum */
 #endif              /* F_CRC */
     ok = (xunchar(*pbc) == chk1(q, k));
-#ifdef DEBUG
-    if (ok && xerror())
-      ok = 0;
-#endif /* DEBUG */
     if (!ok) {
       freerslot(k, r_slot);
 #ifdef RECVONLY
@@ -386,10 +379,6 @@ kermit(short f,                /* Function code */
   case 2: /* Type 2, 12-bit checksum */
     i = xunchar(*pbc) << 6 | xunchar(pbc[1]);
     ok = (i == chk2(q, k));
-#ifdef DEBUG
-    if (ok && xerror())
-      ok = 0;
-#endif                /* DEBUG */
     if (!ok) {        /* No match */
       if (t == 'E') { /* Allow E packets to have type 1 */
         int j;
@@ -417,12 +406,6 @@ kermit(short f,                /* Function code */
   case 3: /* Type 3, 16-bit CRC */
     crc = (xunchar(pbc[0]) << 12) | (xunchar(pbc[1]) << 6) | (xunchar(pbc[2]));
     ok = (crc == chk3(q, k));
-#ifdef DEBUG
-    if (ok && xerror()) {
-      ok = 0;
-      debug(DB_MSG, "CRC ERROR INJECTED", 0, 0);
-    }
-#endif /* DEBUG */
     if (!ok) {
       debug(DB_LOG, "CRC ERROR t", 0, t);
       if (t == 'E') { /* Allow E packets to have type 1 */
@@ -958,17 +941,6 @@ STATIC int spkt(char typ, short seq, int len, UCHAR *data, struct k_data *k) {
   k->opktlen = i; /* Remember length for retransmit */
 
 #ifdef DEBUG
-  /* CORRUPT THE PACKET SENT BUT NOT THE ONE WE SAVE */
-  if (xerror()) {
-    UCHAR p[P_PKTLEN + 8];
-    int i;
-    for (i = 0; i < P_PKTLEN; i++)
-      if (!(p[i] = buf[i]))
-        break;
-    p[i - 2] = 'X';
-    debug(DB_PKT, "XPKT", (char *)&p[1], 0);
-    return ((*(k->txd))(k, p, k->opktlen)); /* Send it. */
-  }
   debug(DB_PKT, "SPKT", (char *)&buf[1], 0);
 #endif /* DEBUG */
 
