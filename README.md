@@ -1,48 +1,21 @@
-# E-Kermit -- Kermit for Embedding
+# Neo6502-Kermit
 
-See <https://kermitproject.org/ek.html> for the details.
+Based on E-Kermit v1.8
 
-## Tags
+## Kermit communication channel
 
-* Currently adding all stuff on `main`
-* `v1.8`: original file tag
+* Neo6502 UEXT UART
+* Default speed: 230400bps
+* 8-bit, no parity
 
-## Testing status
+## Requirement
 
-* Build tested on macOS 15.3.1 Apple Silicon
-* Build tested on Ubuntu 24.04.1 amd64
+* [LLVM-MOS SDK](https://github.com/llvm-mos/llvm-mos-sdk/)
 
-## On compilation warnings
+## Current status
 
-(Originally written in AAREADME.TXT by Frank da Cruz)
-
-### E-KERMIT COMPILATION WARNINGS
-
-EK 1.7 compiled without warnings on a great many platforms in 2011.
-Now in 2021 it gets all kinds of political-correctness warnings,
-different ones on different platforms.  This is because every release
-of every variety of Unix tends to change or move header files and/or
-the function definitions within them out from under the applications
-that depend on them, and also because the C compilers become
-increasingly picky.  Earlier programming environments were not like
-this; for example, if you wrote a program in PL/I or SNOBOL, it
-*stayed* written.
-
-I'm not going to worry about this; it's a rabbit hole and no amount
-of fixing will prevent it happening again in another year or two.
-E-Kermit 1.8, released today, corrects a bug when using the Unix demo
-version and the -B or -T option is included on the command line.  It
-gets the same warnings as 1.7
-
-The warnings are harmless; the program works on at least on Red Hat
-Enterprise Linux 2.6, on NetBSD 9.0, and Ubuntu 20.04.1.  If you have any
-ideas how the improve the E-Kermit code to cope with this situation without
-burying it in mountains of #ifdefs, please let me know.
-
-Frank da Cruz<br>
-The Kermit Project<br>
-`fdc@columbia.edu`<br>
-26 May 2021
+*[x] Fix basic compilation errors
+*[x] Add Neo6502 I/O functions to neoio.c
 
 ## License
 
