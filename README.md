@@ -25,9 +25,9 @@ TBD
 * [x] Fix basic compilation errors
 * [x] Add Neo6502 I/O functions to neoio.c
 * [x] Basic invocation test on emulator
-* [] Actual testing over baremetal UART
-* [] Program enhancement on file transfer
-* [] Debug logging on file
+* [ ] Actual testing over baremetal UART
+* [ ] Program enhancement on file transfer
+* [ ] Debug logging on file
 
 ## License
 
