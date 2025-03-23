@@ -65,8 +65,9 @@
 #define NEO6502
 
 #ifdef NEO6502
-#define NO_LP /* Long packets too big for APF9 */
-#define FN_MAX 16
+#define NO_LP /* No long packets */
+#define NO_SCAN /* We don't need F_SCAN, transparent file only */
+#define FN_MAX 12 /* DOS 8.3 format */
 #endif /* NEO6502 */
 
 /* XAC compiler for Philips XAG30 microprocessor */
