@@ -60,7 +60,7 @@ void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
   if (fc != DB_OPN && !xdebug)
     return;
   if (!label)
-    label = "";
+    label = (UCHAR *)"";
   switch (fc) { /* Function code */
   case DB_OPN:  /* Open debug log */
     xdebug = 1;
@@ -204,7 +204,7 @@ int openfile(struct k_data *k, UCHAR *s, int mode) {
 
   switch (mode) {
   case 1: /* Read */
-    neo_file_open(ichannel, s, 0); // read-only
+    neo_file_open(ichannel, (const char *)s, 0); // read-only
     k->s_first = 1;        /* Set up for getkpt */
     k->zinbuf[0] = '\0';   /* Initialize buffer */
     k->zinptr = k->zinbuf; /* Set up buffer pointer */
@@ -213,9 +213,9 @@ int openfile(struct k_data *k, UCHAR *s, int mode) {
     return (X_OK);
 
   case 2: /* Write (create) */
-    neo_file_open(ochannel, s, 3); // truncate and read-write
+    neo_file_open(ochannel, (const char *)s, 3); // truncate and read-write
     neo_file_close(ochannel); // close the file first
-    neo_file_open(ochannel, s, 1); // re-open for write-only
+    neo_file_open(ochannel, (const char *)s, 1); // re-open for write-only
     debug(DB_LOG, "openfile write ok", s, 0);
     return (X_OK);
 
@@ -252,7 +252,7 @@ fileinfo(struct k_data *k, UCHAR *filename, UCHAR *buf, int buflen, short *type,
   buf[0] = '\0'; // No datetime info
   if (buflen < 18)
     return (X_ERROR);
-  neo_file_stat(filename, &stat); 
+  neo_file_stat((const char *)filename, &stat); 
 
 #ifdef F_SCAN
   if (!mode) { /* File type determination requested */
@@ -375,7 +375,7 @@ int closefile(struct k_data *k, UCHAR c, int mode) {
             (c == 'D')) {      /* This file was incomplete */
       if (k->filename) {
         debug(DB_LOG, "deleting incomplete", k->filename, 0);
-        neo_file_delete(k->filename); /* Delete it. */
+        neo_file_delete((const char *)k->filename); /* Delete it. */
       }
     }
     break;
