@@ -196,7 +196,7 @@ int tx_data(struct k_data *k, UCHAR *p, int n) {
   max = 10; /* Loop breaker */
 
   while (n > 0) { /* Keep trying till done */
-    x = write(ttyfd, p, n);
+    x = neo_uext_uart_block_write(0, p, n);
     debug(DB_MSG, "tx_data write", 0, x);
     if (x < 0 || --max < 1) /* Errors are fatal */
       return (X_ERROR);
