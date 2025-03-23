@@ -117,9 +117,14 @@ int main(int argc, char **argv) {
   parity = P_PARITY; /* Set this to desired parity */
   status = X_OK;     /* Initial kermit status */
 
-  /* THE REAL STUFF IS FROM HERE DOWN */
+  // Code starts here
 
-  debug(DB_MSG, "Initializing...", 0, 0);
+  neo_console_clear_screen();
+  printf("This is Neo6502-Kermit\n");
+
+#ifdef DEBUG
+  debug(DB_OPN, "DEBUG enabled", 0, 0);
+#endif // DEBUG
 
   /*  Fill in parameters for this run */
 
@@ -164,7 +169,7 @@ int main(int argc, char **argv) {
   status = kermit(K_INIT, &k, 0, 0, "", &r);
 #ifdef DEBUG
   debug(DB_LOG, "init status:", 0, status);
-  debug(DB_LOG, "version:", k.version, 0);
+  debug(DB_LOG, "E-Kermit version:", k.version, 0);
 #endif /* DEBUG */
   if (status == X_ERROR)
     doexit(FAILURE);
@@ -218,8 +223,9 @@ int main(int argc, char **argv) {
         name, date, size, and bytes transferred so far.  These can be used in a
         file-transfer progress display, log, etc.
       */
-      debug(DB_LOG, "NAME", r.filename ? (char *)r.filename : "(NULL)", 0);
-      debug(DB_LOG, "DATE", r.filedate ? (char *)r.filedate : "(NULL)", 0);
+      
+      debug(DB_LOG, "NAME", (UCHAR *)(r.filename != (UCHAR *)(0) ? (char *)r.filename : "(NULL)"), 0);
+      debug(DB_LOG, "DATE", (UCHAR *)(r.filedate != (UCHAR *)(0) ? (char *)r.filedate : "(NULL)"), 0);
       debug(DB_LOG, "SIZE", 0, r.filesize);
       debug(DB_LOG, "STATE", 0, r.status);
       debug(DB_LOG, "SOFAR", 0, r.sofar);
