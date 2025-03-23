@@ -6,7 +6,8 @@
 
 CC = ${HOME}/bin/llvm-mos/bin/mos-neo6502-clang
 INCLUDE  = ${HOME}/bin/llvm-mos/mos-platform/neo6502/include
-CFLAGS = -Os -I${INCLUDE}
+# CFLAGS = -Os -I${INCLUDE}
+CFLAGS = -Os -I${INCLUDE} -DDEBUG
 
 OBJS = main.o kermit.o neoio.o
 TARGET = kermit.neo
