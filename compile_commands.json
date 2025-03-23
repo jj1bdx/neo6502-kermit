@@ -1,0 +1,17 @@
+[
+  {
+    "directory": "/Users/kenji/src/neo6502-kermit",
+    "command": "/Users/kenji/bin/llvm-mos/bin/mos-neo6502-clang -Os -I/Users/kenji/bin/llvm-mos/mos-platform/neo6502/include   -c -o main.o main.c",
+    "file": "main.c"
+  },
+  {
+    "directory": "/Users/kenji/src/neo6502-kermit",
+    "command": "/Users/kenji/bin/llvm-mos/bin/mos-neo6502-clang -Os -I/Users/kenji/bin/llvm-mos/mos-platform/neo6502/include   -c -o kermit.o kermit.c",
+    "file": "kermit.c"
+  },
+  {
+    "directory": "/Users/kenji/src/neo6502-kermit",
+    "command": "/Users/kenji/bin/llvm-mos/bin/mos-neo6502-clang -Os -I/Users/kenji/bin/llvm-mos/mos-platform/neo6502/include   -c -o neoio.o neoio.c",
+    "file": "neoio.c"
+  }
+]
