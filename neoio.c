@@ -39,7 +39,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <kernel.h>
 #include <neo/api.h>
 
 #include "cdefs.h"
@@ -205,8 +204,8 @@ int tx_data(struct k_data *k, UCHAR *p, int n) {
 // without blocking.
 
 int inchk(struct k_data *k) {
-  KSendMessageSync(API_GROUP_UEXT, API_FN_UART_AVAILABLE);
-  return ControlPort.params[0];
+  // TODO: is this implementation sufficient?
+  return neo_uext_uart_available() ? 1 : 0;
 }
 
 // File I/O section
