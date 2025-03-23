@@ -4,10 +4,11 @@
 #  Trustees of Columbia University in the City of New York.
 #  All Rights Reserved.  See kermit.c for license.
 
-CC = ~/bin/llvm-mos/bin/mos-neo6502-clang
-INCLUDE  = ~/bin/llvm-mos/mos-platform/neo6502/include
-CFLAGS = -Os
-OBJS= main.o kermit.o neoio.o
+CC = ${HOME}/bin/llvm-mos/bin/mos-neo6502-clang
+INCLUDE  = ${HOME}/bin/llvm-mos/mos-platform/neo6502/include
+CFLAGS = -Os -I${INCLUDE}
+OBJS = main.o kermit.o neoio.o
+ALL = $(OBJS)
 
 #Dependencies
 
