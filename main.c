@@ -73,7 +73,7 @@ struct k_response r; /* Kermit response structure */
 
 char **xargv;                 /* Global pointer to arg vector */
 UCHAR **cmlist = (UCHAR **)0; /* Pointer to file list */
-char *xname = "neok";           /* Default program name */
+char *xname = "kermit.neo";           /* Default program name */
 
 int action = 0;   /* Send or Receive */
 int xmode = 0;    /* File-transfer mode */
