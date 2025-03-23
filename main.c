@@ -40,36 +40,15 @@
   STUFF to see the real stuff.  ANSI C required.  Note: order of the
   following includes is important.
 */
+
 #include "cdefs.h"  /* Data types for all modules */
 #include "debug.h"  /* Debugging */
 #include "kermit.h" /* Kermit symbols and data structures */
 
-#ifdef __linux__
-#include <ctype.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <unistd.h>
-#endif /* __linux__ */
+#include <stdio.h>
+#include <neo/api.h>
 
-#ifdef __APPLE__
-#include <ctype.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <unistd.h>
-#endif /* __APPLE__ */
-
-/*
-  Sample prototypes for i/o functions.
-  The functions are defined in a platform-specific i/o module.
-  The function names are unknown to the Kermit module.
-  The names can be changed but not their calling conventions.
-  The following prototypes are keyed to unixio.c.
-*/
-int devopen(char *); /* Communications device/path */
-int devsettings(char *);
-int devrestore(void);
-int devclose(void);
-int pktmode(short);
+// Prototypes of functions in neoio.c
 
 int readpkt(struct k_data *, UCHAR *, int); /* Communications i/o functions */
 int tx_data(struct k_data *, UCHAR *, int);
@@ -94,15 +73,12 @@ struct k_response r; /* Kermit response structure */
 
 char **xargv;                 /* Global pointer to arg vector */
 UCHAR **cmlist = (UCHAR **)0; /* Pointer to file list */
-char *xname = "ek";           /* Default program name */
+char *xname = "neok";           /* Default program name */
 
-int xargc;        /* Global argument count */
-int nfils = 0;    /* Number of files in file list */
 int action = 0;   /* Send or Receive */
 int xmode = 0;    /* File-transfer mode */
 int ftype = 1;    /* Global file type 0=text 1=binary*/
 int keep = 0;     /* Keep incompletely received files */
-int db = 0;       /* Debugging */
 short fmode = -1; /* Transfer mode for this file */
 int parity = 0;   /* Parity */
 #ifdef F_CRC
@@ -113,178 +89,26 @@ int check = 1;
 int remote = 1; /* 1 = Remote, 0 = Local */
 
 void doexit(int status) {
+#ifdef COMMENT
   devrestore(); /* Restore device */
   devclose();   /* Close device */
   exit(status); /* Exit with indicated status */
-}
-
-void usage() {
-  fprintf(stderr, "E-Kermit %s\n", VERSION);
-  fprintf(stderr, "Usage: %s <options>\n", xname);
-  fprintf(stderr, "Options:\n");
-  fprintf(stderr, " -r           Receive files\n");
-#ifndef RECVONLY
-  fprintf(stderr, " -s <files>   Send files\n");
-#endif /* RECVONLY */
-  fprintf(stderr, " -p [neoms]   Parity: none, even, odd, mark, space\n");
-#ifdef F_CRC
-  fprintf(stderr, " -b [1235]    Block check type: 1, 2, 3, or 5\n");
-#endif /* F_CRC */
-  fprintf(stderr, " -k           Keep incompletely received files\n");
-  fprintf(stderr, " -B           Force binary mode\n");
-  fprintf(stderr, " -T           Force text mode\n");
-  fprintf(stderr, " -R           Remote mode (vs local)\n");
-  fprintf(stderr, " -L           Local mode (vs remote)\n");
-#ifdef DEBUG
-  fprintf(stderr, " -E <number>  Simulated error rate (0-100)\n");
-  fprintf(stderr, " -d           Create debug.log\n");
-#endif /* DEBUG */
-  fprintf(stderr, " -h           Help (this message)\n");
-  doexit(FAILURE);
+#endif // COMMENT
 }
 
 void fatal(char *msg1, char *msg2, char *msg3) { /* Not to be called except */
   if (msg1) {                                    /* from this module */
-    fprintf(stderr, "%s: %s", xname, msg1);
+    printf("%s: %s", xname, msg1);
     if (msg2)
-      fprintf(stderr, "%s", msg2);
+      printf("%s", msg2);
     if (msg3)
-      fprintf(stderr, "%s", msg3);
-    fprintf(stderr, "\n");
+      printf("%s", msg3);
+    printf("\n");
   }
   doexit(FAILURE);
 }
 
-/* Simple user interface for testing */
-
-int doarg(char c) { /* Command-line option parser */
-  int x;            /* Parses one option with its arg(s) */
-  char *xp, *s;
-  struct stat statbuf;
-
-  xp = *xargv + 1; /* Pointer for bundled args */
-  while (c) {
-    switch (c) {
-    case 'r': /* Receive */
-      if (action)
-        fatal("Conflicting actions", (char *)0, (char *)0);
-      action = A_RECV;
-      break;
-
-#ifndef RECVONLY
-    case 's': /* Send */
-      if (action)
-        fatal("Conflicting actions", (char *)0, (char *)0);
-      if (*(xp + 1))
-        fatal("Invalid argument bundling after -s", (char *)0, (char *)0);
-      nfils = 0;                      /* Initialize file counter, flag */
-      cmlist = (UCHAR **)(xargv + 1); /* Remember this pointer */
-      while (--xargc > 0) {           /* Traverse the list */
-        xargv++;
-        s = *xargv;
-        if (**xargv == '-')
-          break;
-        errno = 0;
-        x = stat(s, &statbuf);
-        if (x < 0)
-          fatal("File '", s, "' not found");
-        if (access(s, 4) < 0)
-          fatal("File '", s, "' not accessible");
-        nfils++;
-      }
-      xargc++, *xargv--; /* Adjust argv/argc */
-      if (nfils < 1)
-        fatal("Missing filename for -s", (char *)0, (char *)0);
-      action = A_SEND;
-      break;
-#endif /* RECVONLY */
-
-#ifdef F_CRC
-    case 'b': /* Block-check type */
-#endif        /* F_CRC */
-#ifdef DEBUG
-    case 'E': /* Simulated error rate */
-#endif        /* DEBUG */
-      if (*(xp + 1))
-        fatal("Invalid argument bundling", (char *)0, (char *)0);
-      *xargv++, xargc--;
-      if ((xargc < 1) || (**xargv == '-'))
-        fatal("Missing option argument", (char *)0, (char *)0);
-      s = *xargv;
-      while (*s) {
-        if (!isdigit(*s))
-          fatal("Numeric argument required", (char *)0, (char *)0);
-        s++;
-      }
-      if (c == 'b') {
-        check = atoi(*xargv);
-        if (check < 1 || check > 5 || check == 4)
-          fatal("Invalid block check", (char *)0, (char *)0);
-      }
-      break;
-
-    case 'h': /* Help */
-    case '?':
-      usage();
-
-    case 'B':    /* Force binary file transfer */
-      xmode = 1; /* So no automatic switching */
-      ftype = BINARY;
-      break;
-
-    case 'T':    /* Force text file transfer */
-      xmode = 1; /* So no automatic switching */
-      ftype = TEXT;
-      break;
-
-    case 'R': /* Tell Kermit it's in remote mode */
-      remote = 1;
-      break;
-
-    case 'L': /* Tell Kermit it's in local mode */
-      remote = 0;
-      break;
-
-    case 'k': /* Keep incompletely received files */
-      keep = 1;
-      break;
-
-    case 'p': /* Parity */
-      if (*(xp + 1))
-        fatal("Invalid argument bundling", (char *)0, (char *)0);
-      *xargv++, xargc--;
-      if ((xargc < 1) || (**xargv == '-'))
-        fatal("Missing parity", (char *)0, (char *)0);
-      switch (x = **xargv) {
-      case 'e': /* Even */
-      case 'o': /* Odd */
-      case 'm': /* Mark */
-      case 's':
-        parity = x;
-        break; /* Space */
-      case 'n':
-        parity = 0;
-        break; /* None */
-      default:
-        fatal("Invalid parity '", *xargv, "'");
-      }
-      break;
-
-#ifdef DEBUG
-    case 'd':
-      db++;
-      break;
-#endif /* DEBUG */
-
-    default: /* Anything else */
-      fatal("Unknown command-line option ", *xargv, " type 'ek -h' for help.");
-    }
-    c = *++xp; /* See if options are bundled */
-  }
-  return (action);
-}
-
-void main(int argc, char **argv) {
+int main(int argc, char **argv) {
   int status, rx_len, i, x;
   char c;
   UCHAR *inbuf;
@@ -293,32 +117,7 @@ void main(int argc, char **argv) {
   parity = P_PARITY; /* Set this to desired parity */
   status = X_OK;     /* Initial kermit status */
 
-  xargc = argc;
-  xargv = argv;
-  xname = argv[0];
-
-  while (--xargc > 0) { /* Loop through command-line words */
-    xargv++;
-    if (**xargv == '-') { /* Have dash */
-      c = *(*xargv + 1);  /* Get the option letter */
-      x = doarg(c);       /* Go handle the option */
-      if (x < 0)
-        doexit(FAILURE);
-    } else { /* No dash where expected */
-      fatal("Malformed command-line option: '", *xargv, "'");
-    }
-  }
-  if (!action) /* Nothing to do, give usage message */
-    usage();
-
   /* THE REAL STUFF IS FROM HERE DOWN */
-
-  if (!devopen("dummy")) /* Open the communication device */
-    doexit(FAILURE);
-  if (!devsettings("dummy")) /* Perform any needed settings */
-    doexit(FAILURE);
-  if (db) /* Open debug log if requested */
-    debug(DB_OPN, "debug.log", 0, 0);
 
   debug(DB_MSG, "Initializing...", 0, 0);
 
@@ -326,9 +125,9 @@ void main(int argc, char **argv) {
 
   k.xfermode = xmode;               /* Text/binary automatic/manual  */
   k.remote = remote;                /* Remote vs local */
-  k.binary = ftype;                 /* 0 = text, 1 = binary */
+  k.binary = 1;                     /* 0 = text, 1 = binary */
   k.parity = parity;                /* Communications parity */
-  k.bct = (check == 5) ? 3 : check; /* Block check type */
+  k.bct = 3;                        /* Block check type */
   k.ikeep = keep;                   /* Keep incompletely received files */
   k.filelist = cmlist;              /* List of files to send (if any) */
   k.cancel = 0;                     /* Not canceled yet */
@@ -353,12 +152,12 @@ void main(int argc, char **argv) {
   k.writef = writefile; /* for writing to output file */
   k.closef = closefile; /* for closing files */
 #ifdef DEBUG
-  k.dbf = db ? dodebug : 0; /* for debugging */
+  k.dbf = dodebug;      /* for debugging */
 #else
   k.dbf = 0;
 #endif /* DEBUG */
   /* Force Type 3 Block Check (16-bit CRC) on all packets, or not */
-  k.bctf = (check == 5) ? 1 : 0;
+  k.bctf = 1;
 
   /* Initialize Kermit protocol */
 
