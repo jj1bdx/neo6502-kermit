@@ -43,7 +43,6 @@
 #include "cdefs.h"    /* Data types for all modules */
 #include "debug.h"    /* Debugging */
 #include "kermit.h"   /* Kermit symbols and data structures */
-#include "platform.h" /* Platform-specific includes and definitions */
 
 #ifdef __linux__
 #include <ctype.h>

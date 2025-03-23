@@ -7,15 +7,15 @@
 CC = ~/bin/llvm-mos/bin/mos-neo6502-clang
 INCLUDE  = ~/bin/llvm-mos/mos-platform/neo6502/include
 CFLAGS = -Os
-OBJS= main.o kermit.o unixio.o
+OBJS= main.o kermit.o neoio.o
 
 #Dependencies
 
-main.o: main.c cdefs.h debug.h kermit.h platform.h
+main.o: main.c cdefs.h debug.h kermit.h
 
 kermit.o: kermit.c cdefs.h debug.h kermit.h
 
-unixio.o: unixio.c cdefs.h debug.h platform.h kermit.h
+neoio.o: neoio.c cdefs.h debug.h kermit.h
 
 #Targets
 
