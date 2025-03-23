@@ -48,6 +48,10 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 */
+
+// Kenji Rikitake 23-MAR-2025:
+// xerror() removed to avoid dependency to rand()
+
 #include "kermit.h" /* Kermit protocol definitions */
 #include "cdefs.h"  /* C language defs for all modules */
 #include "debug.h"  /* Debugging */
