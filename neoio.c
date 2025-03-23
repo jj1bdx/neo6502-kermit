@@ -25,6 +25,7 @@
 // UART/device I/O:
 // int readpkt()
 // int tx_data()
+// int inchk()
 // TODO: implement UART baudrate config function
 // File I/O:
 // int openfile()
@@ -38,6 +39,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <kernel.h>
 #include <neo/api.h>
 
 #include "cdefs.h"
@@ -182,6 +184,20 @@ int tx_data(struct k_data *k, UCHAR *p, int n) {
   debug(DB_MSG, "tx_data write", 0, n);
   return (X_OK); /* Success */
 }
+ 
+// Check if input waiting
+//
+// Check if input is waiting to be read, needed for sliding windows.
+// If your platform does not provide a way to
+// look at the device input buffer without blocking and without actually
+// reading from it, make this routine return -1.  On success, returns the
+// numbers of characters waiting to be read, i.e. that can be safely read
+// without blocking.
+
+int inchk(struct k_data *k) {
+  KSendMessageSync(API_GROUP_UEXT, API_FN_UART_AVAILABLE);
+  return ControlPort.params[0];
+}
 
 // File I/O section
 
@@ -284,7 +300,6 @@ int readfile(struct k_data *k) {
 
       for (k->zincnt = 0; (k->zincnt < (k->zinlen - 2)); (k->zincnt)++) {
         if (neo_file_eof(ichannel)) {
-          c = EOF;
           break;
         }
         (void)neo_file_read(ichannel, &ch, 1);
