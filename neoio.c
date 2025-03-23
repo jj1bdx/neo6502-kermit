@@ -25,6 +25,7 @@
 // UART/device I/O:
 // int readpkt()
 // int tx_data()
+// TODO: implement UART baudrate config function
 // File I/O:
 // int openfile()
 // ULONG fileinfo() (no timestamp)
@@ -34,6 +35,7 @@
 
 // NOTE: stdio is unavailable on Neo6502!
 
+#include <stdint.h>
 #include <neo/api.h>
 
 #include "cdefs.h"
@@ -98,6 +100,8 @@ void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
   }
 }
 #endif /* DEBUG */
+
+// UART section
 
 // Read a Kermit packet from UART
 // Call with:
@@ -186,44 +190,36 @@ int readpkt(struct k_data *k, UCHAR *p, int len, int fc) {
 //   n = length.
 // Returns:
 //   X_OK on success.
-//   X_ERROR on failure to write - i/o error.
+//   (Unable to detect write error here)
 
 int tx_data(struct k_data *k, UCHAR *p, int n) {
-  int x;
-  int max;
-
-  max = 10; /* Loop breaker */
-
-  while (n > 0) { /* Keep trying till done */
-    x = neo_uext_uart_block_write(0, p, n);
-    debug(DB_MSG, "tx_data write", 0, x);
-    if (x < 0 || --max < 1) /* Errors are fatal */
-      return (X_ERROR);
-    n -= x;
-    p += x;
-  }
+  neo_uext_uart_block_write(0, p, n);
+  debug(DB_MSG, "tx_data write", 0, n);
   return (X_OK); /* Success */
 }
 
-/*  O P E N F I L E  --  Open output file  */
-/*
-  Call with:
-    Pointer to filename.
-    Size in bytes.
-    Creation date in format yyyymmdd hh:mm:ss, e.g. 19950208 14:00:00
-    Mode: 1 = read, 2 = create, 3 = append.
-  Returns:
-    X_OK on success.
-    X_ERROR on failure, including rejection based on name, size, or date.
-*/
+// File I/O section
+
+// Static variables
+
+uint8_t ichannel = 1;
+uint8_t ochannel = 2;
+
+// Open output file
+//  Call with:
+//    Pointer to filename.
+//    Size in bytes.
+//    Creation date in format yyyymmdd hh:mm:ss, e.g. 19950208 14:00:00
+//    Mode: 1 = read, 2 = create.
+//  Returns:
+//    X_OK on success.
+//    X_ERROR on failure, including rejection based on name, size, or date.
+
 int openfile(struct k_data *k, UCHAR *s, int mode) {
 
   switch (mode) {
   case 1: /* Read */
-    if (!(ifile = fopen(s, "r"))) {
-      debug(DB_LOG, "openfile read error", s, 0);
-      return (X_ERROR);
-    }
+    neo_file_open(ichannel, s, 0); // read-only
     k->s_first = 1;        /* Set up for getkpt */
     k->zinbuf[0] = '\0';   /* Initialize buffer */
     k->zinptr = k->zinbuf; /* Set up buffer pointer */
@@ -232,24 +228,11 @@ int openfile(struct k_data *k, UCHAR *s, int mode) {
     return (X_OK);
 
   case 2: /* Write (create) */
-    ofile = creat(s, 0644);
-    if (ofile < 0) {
-      debug(DB_LOG, "openfile write error", s, 0);
-      return (X_ERROR);
-    }
+    neo_file_open(ochannel, s, 3); // truncate and read-write
+    neo_file_close(ochannel); // close the file first
+    neo_file_open(ochannel, s, 1); // re-open for write-only
     debug(DB_LOG, "openfile write ok", s, 0);
     return (X_OK);
-
-#ifdef COMMENT
-  case 3: /* Append (not used) */
-    ofile = open(s, O_WRONLY | O_APPEND);
-    if (ofile < 0) {
-      debug(DB_LOG, "openfile append error", s, 0);
-      return (X_ERROR);
-    }
-    debug(DB_LOG, "openfile append ok", s, 0);
-    return (X_OK);
-#endif /* COMMENT */
 
   default:
     return (X_ERROR);
