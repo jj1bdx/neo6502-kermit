@@ -58,10 +58,12 @@ UCHAR i_buf[IBUFLEN + 8]; /* File output buffer */
 static int xdebug = 0; /* Debugging on/off */
 
 void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
-  if (fc != DB_OPN && !xdebug)
+  if (fc != DB_OPN && !xdebug) {
     return;
-  if (!label)
+  }
+  if (!label) {
     label = (UCHAR *)"";
+  }
   switch (fc) { /* Function code */
   case DB_OPN:  /* Open debug log */
     xdebug = 1;
@@ -76,10 +78,11 @@ void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
   case DB_PKT: /* Log a packet */
                /* (fill in later, fall thru for now...) */
   case DB_LOG: /* Write label and string or number */
-    if (sval)
+    if (sval) {
       printf("%s[%s]\n", label, sval);
-    else
+    } else {
       printf("%s=%ld\n", label, nval);
+    }
     return;
   case DB_CLS: /* Close debug log */
     xdebug = 0;
@@ -155,24 +158,26 @@ int readpkt(struct k_data *k, UCHAR *p, int len, int fc) {
     }
 #endif /* F_CTRLC */
 
-    if (!flag && c != k->r_soh) /* No start of packet yet */
-      continue;                 /* so discard these bytes. */
-    if (c == k->r_soh) {        /* Start of packet */
-      flag = 1;                 /* Remember */
-      continue;                 /* But discard. */
-    } else if (c == k->r_eom    /* Packet terminator */
-               || c == '\012'   /* 1.3: For HyperTerminal */
+    if (!flag && c != k->r_soh) { /* No start of packet yet */
+      continue;                   /* so discard these bytes. */
+    }
+    if (c == k->r_soh) {      /* Start of packet */
+      flag = 1;               /* Remember */
+      continue;               /* But discard. */
+    } else if (c == k->r_eom  /* Packet terminator */
+               || c == '\012' /* 1.3: For HyperTerminal */
     ) {
 #ifdef DEBUG
       *p = NUL; /* Terminate for printing */
       debug(DB_PKT, "RPKT", p2, n);
 #endif /* DEBUG */
       return (n);
-    } else {                 /* Contents of packet */
-      if (n++ > k->r_maxlen) /* Check length */
+    } else {                   /* Contents of packet */
+      if (n++ > k->r_maxlen) { /* Check length */
         return (0);
-      else
+      } else {
         *p++ = x & 0xff;
+      }
     }
   }
   debug(DB_MSG, "READPKT FAIL (end)", 0, 0);
@@ -272,11 +277,13 @@ fileinfo(struct k_data *k, UCHAR *filename, UCHAR *buf, int buflen, short *type,
          short mode) {
   neo_file_stat_t stat;
 
-  if (!buf)
+  if (!buf) {
     return (X_ERROR);
+  }
   buf[0] = '\0'; // No datetime info
-  if (buflen < 18)
+  if (buflen < 18) {
     return (X_ERROR);
+  }
   neo_file_stat((const char *)filename, &stat);
 
 #ifdef F_SCAN
@@ -313,8 +320,9 @@ int readfile(struct k_data *k) {
         }
         (void)neo_file_read(ichannel, &ch, 1);
         c = (int)ch;
-        if (c == '\n')                     /* Have newline? */
+        if (c == '\n') {                   /* Have newline? */
           k->zinbuf[(k->zincnt)++] = '\r'; /* Insert CR */
+        }
         k->zinbuf[k->zincnt] = c;
       }
 #ifdef DEBUG
@@ -323,8 +331,9 @@ int readfile(struct k_data *k) {
 #endif /* DEBUG */
     }
     k->zinbuf[k->zincnt] = '\0'; /* Terminate. */
-    if (k->zincnt == 0)          /* Check for EOF */
+    if (k->zincnt == 0) {        /* Check for EOF */
       return (-1);
+    }
     k->zinptr = k->zinbuf; /* Not EOF - reset pointer */
   }
   (k->zincnt)--; /* Return first byte. */
@@ -351,8 +360,9 @@ int writefile(struct k_data *k, UCHAR *s, int n) {
   debug(DB_LOG, "writefile binary", 0, k->binary);
 
   if (k->binary) { /* Binary mode, just write it */
-    if (neo_file_write(ochannel, s, n) != n)
+    if (neo_file_write(ochannel, s, n) != n) {
       rc = X_ERROR;
+    }
   } else { /* Text mode, skip CRs */
     UCHAR *p, *q;
     int i;
@@ -361,11 +371,14 @@ int writefile(struct k_data *k, UCHAR *s, int n) {
     while (1) {
       for (p = q, i = 0; ((*p) && (*p != (UCHAR)13)); p++, i++)
         ;
-      if (i > 0)
-        if (neo_file_write(ochannel, q, i) != i)
+      if (i > 0) {
+        if (neo_file_write(ochannel, q, i) != i) {
           rc = X_ERROR;
-      if (!*p)
+        }
+      }
+      if (!*p) {
         break;
+      }
       q = p + 1;
     }
   }

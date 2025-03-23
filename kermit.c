@@ -137,8 +137,9 @@ kermit(short f,                /* Function code */
 
     /* Initialize the k_data structure */
 
-    for (i = 0; i < 6; i++)
+    for (i = 0; i < 6; i++) {
       k->s_remain[i] = '\0';
+    }
 
     k->state = R_WAIT; /* Beginning protocol state */
     r->status = R_WAIT;
@@ -223,9 +224,10 @@ kermit(short f,                /* Function code */
 
 #ifndef RECVONLY
   } else if (f == K_SEND) {
-    if (rpar(k, 'S') != X_OK) /* Send S packet with my parameters */
-      return (X_ERROR);       /* I/O error, quit. */
-    k->state = S_INIT;        /* All OK, switch states */
+    if (rpar(k, 'S') != X_OK) { /* Send S packet with my parameters */
+      return (X_ERROR);         /* I/O error, quit. */
+    }
+    k->state = S_INIT; /* All OK, switch states */
     r->status = S_INIT;
     k->what = W_SEND; /* Act like a sender */
     return (X_OK);
@@ -245,27 +247,30 @@ kermit(short f,                /* Function code */
   } else if (f != K_RUN) { /* Anything else is an error. */
     return (X_ERROR);
   }
-  if (k->state == R_NONE) /* (probably unnecessary) */
+  if (k->state == R_NONE) { /* (probably unnecessary) */
     return (X_OK);
+  }
 
   /* If we're in the protocol, check to make sure we got a new packet */
 
   debug(DB_LOG, "r_slot", 0, r_slot);
   debug(DB_LOG, "len", 0, len);
 
-  if (r_slot < 0) /* We should have a slot here */
+  if (r_slot < 0) { /* We should have a slot here */
     return (K_ERROR);
-  else
+  } else {
     k->ipktinfo[r_slot].len = len; /* Copy packet length to ipktinfo. */
+  }
 
   if (len < 4) { /* Packet obviously no good? */
 #ifdef RECVONLY
     return (nak(k, k->r_seq, r_slot)); /* Send NAK for the packet we want */
 #else
-    if (k->what == W_RECV)               /* If receiving */
+    if (k->what == W_RECV) {             /* If receiving */
       return (nak(k, k->r_seq, r_slot)); /* Send NAK for the packet we want */
-    else                                 /* If sending */
+    } else {                             /* If sending */
       return (resend(k));                /* retransmit last packet. */
+    }
 #endif /* RECVONLY */
   }
 
@@ -310,10 +315,11 @@ kermit(short f,                /* Function code */
 #ifdef RECVONLY
       return (nak(k, k->r_seq, r_slot)); /* Send NAK */
 #else
-      if (k->what == W_RECV)
+      if (k->what == W_RECV) {
         return (nak(k, k->r_seq, r_slot)); /* Send NAK */
-      else
+      } else {
         return (resend(k));
+      }
 #endif /* RECVONLY */
     }
     debug(DB_MSG, "HDR CHKSUM OK", 0, 0);
@@ -352,8 +358,9 @@ kermit(short f,                /* Function code */
   debug(DB_LOG, "chkalen", 0, chklen);
 
 #ifdef F_CRC
-  for (i = 0; i < chklen; i++) /* Copy the block check */
+  for (i = 0; i < chklen; i++) { /* Copy the block check */
     pbc[i] = p[datalen + i];
+  }
   pbc[i] = '\0'; /* Null-terminate block check string */
 #else
   pbc[0] = p[datalen];
@@ -370,10 +377,11 @@ kermit(short f,                /* Function code */
 #ifdef RECVONLY
       nak(k, k->r_seq, r_slot);
 #else
-    if (k->what == W_RECV)
+    if (k->what == W_RECV) {
       nak(k, k->r_seq, r_slot);
-    else
+    } else {
       resend(k);
+    }
 #endif /* RECVONLY */
       return (X_OK);
     }
@@ -389,19 +397,21 @@ kermit(short f,                /* Function code */
         j = datalen;
         p[j++] = pbc[0];
         p[j] = '\0';
-        if (xunchar(pbc[1]) == chk1(q, k))
+        if (xunchar(pbc[1]) == chk1(q, k)) {
           break;
-        else
+        } else {
           p[--j] = '\0';
+        }
       }
       freerslot(k, r_slot);
 #ifdef RECVONLY
       nak(k, k->r_seq, r_slot);
 #else
-      if (k->what == W_RECV)
+      if (k->what == W_RECV) {
         nak(k, k->r_seq, r_slot);
-      else
+      } else {
         resend(k);
+      }
 #endif /* RECVONLY */
       return (X_OK);
     }
@@ -418,9 +428,9 @@ kermit(short f,                /* Function code */
         p[j++] = pbc[0];
         p[j++] = pbc[1];
         p[j] = '\0';
-        if (xunchar(pbc[2]) == chk1(q, k))
+        if (xunchar(pbc[2]) == chk1(q, k)) {
           break;
-        else {
+        } else {
           j -= 2;
           p[j] = '\0';
         }
@@ -429,21 +439,24 @@ kermit(short f,                /* Function code */
 #ifdef RECVONLY
       nak(k, k->r_seq, r_slot);
 #else
-      if (k->what == W_RECV)
+      if (k->what == W_RECV) {
         nak(k, k->r_seq, r_slot);
-      else
+      } else {
         resend(k);
+      }
 #endif /* RECVONLY */
       return (X_OK);
     }
   }
-#endif          /* F_CRC */
-  if (t == 'E') /* (AND CLOSE FILES?) */
+#endif            /* F_CRC */
+  if (t == 'E') { /* (AND CLOSE FILES?) */
     return (X_ERROR);
+  }
 
   prev = k->r_seq - 1; /* Get sequence of previous packet */
-  if (prev < 0)
+  if (prev < 0) {
     prev = 63;
+  }
 
   debug(DB_LOG, "Seq", 0, seq);
   debug(DB_LOG, "Prev", 0, prev);
@@ -484,8 +497,9 @@ kermit(short f,                /* Function code */
           *p == 'X' || *p == 'Z') { /* Or by receiver? */
         k->closef(k, *p, 1);        /* Close input file*/
         nxtpkt(k);                  /* Next packet sequence number */
-        if ((rc = spkt('Z', k->s_seq, 0, (UCHAR *)0, k)) != X_OK)
+        if ((rc = spkt('Z', k->s_seq, 0, (UCHAR *)0, k)) != X_OK) {
           return (rc);
+        }
         if (*p == 'Z' || k->cancel == I_GROUP) { /* Cancel Group? */
           debug(DB_MSG, "Group Cancel (Send)", 0, 0);
           while (*(k->filelist)) { /* Go to end of file list */
@@ -525,22 +539,26 @@ kermit(short f,                /* Function code */
       int i;
       for (i = 0; i < FN_MAX; i++) { /* Copy name to result struct */
         r->filename[i] = k->filename[i];
-        if (!(r->filename[i]))
+        if (!(r->filename[i])) {
           break;
+        }
       }
       (k->filelist)++;
       debug(DB_LOG, "Filename", k->filename, 0);
-      if ((rc = (k->openf)(k, k->filename, 1)) != X_OK) /* Try to open */
+      if ((rc = (k->openf)(k, k->filename, 1)) != X_OK) { /* Try to open */
         return (rc);
+      }
       encstr(k->filename, k, r); /* Encode the name for transmission */
-      if ((rc = spkt('F', k->s_seq, -1, k->xdata, k)) != X_OK)
+      if ((rc = spkt('F', k->s_seq, -1, k->xdata, k)) != X_OK) {
         return (rc); /* Send F packet */
+      }
       r->sofar = 0L;
       k->state = S_FILE; /* Wait for ACK */
       r->status = S_FILE;
     } else { /* No more files - we're done */
-      if ((rc = spkt('B', k->s_seq, 0, (UCHAR *)0, k)) != X_OK)
-        return (rc);    /* Send EOT packet */
+      if ((rc = spkt('B', k->s_seq, 0, (UCHAR *)0, k)) != X_OK) {
+        return (rc); /* Send EOT packet */
+      }
       k->state = S_EOT; /* Wait for ACK */
       r->status = S_EOT;
     }
@@ -550,17 +568,19 @@ kermit(short f,                /* Function code */
   case S_FILE: /* Got ACK to F packet */
     nxtpkt(k); /* Get next packet number etc */
 #ifdef F_AT
-    if (k->capas & CAP_AT) {          /* A-packets negotiated? */
-      if ((rc = sattr(k, r)) != X_OK) /* Yes, send Attribute packet */
+    if (k->capas & CAP_AT) {            /* A-packets negotiated? */
+      if ((rc = sattr(k, r)) != X_OK) { /* Yes, send Attribute packet */
         return (rc);
+      }
       k->state = S_ATTR; /* And wait for its ACK */
       r->status = S_ATTR;
     } else
 #endif                        /* F_AT */
       if (sdata(k, r) == 0) { /* No A packets - send first data */
         /* File is empty so send EOF packet */
-        if ((rc = spkt('Z', k->s_seq, 0, (UCHAR *)0, k)) != X_OK)
+        if ((rc = spkt('Z', k->s_seq, 0, (UCHAR *)0, k)) != X_OK) {
           return (rc);
+        }
         k->closef(k, *p, 1); /* Close input file*/
         k->state = S_EOF;    /* Wait for ACK to EOF */
         r->status = S_EOF;
@@ -586,8 +606,9 @@ kermit(short f,                /* Function code */
     debug(DB_LOG, "sdata()", 0, rc);
 
     if (rc == 0) { /* If there was no data to send */
-      if ((rc = spkt('Z', k->s_seq, 0, (UCHAR *)0, k)) != X_OK)
-        return (rc);       /* Send EOF */
+      if ((rc = spkt('Z', k->s_seq, 0, (UCHAR *)0, k)) != X_OK) {
+        return (rc); /* Send EOF */
+      }
       k->closef(k, *p, 1); /* Close input file*/
       k->state = S_EOF;    /* And wait for ACK */
       r->status = S_EOF;
@@ -604,9 +625,10 @@ kermit(short f,                /* Function code */
       spar(k, p, datalen); /* Set parameters from it */
       rc = rpar(k, 'Y');   /* ACK with my parameters */
       debug(DB_LOG, "rpar rc", 0, rc);
-      if (rc != X_OK)
+      if (rc != X_OK) {
         return (X_ERROR); /* I/O error, quit. */
-      k->state = R_FILE;  /* All OK, switch states */
+      }
+      k->state = R_FILE; /* All OK, switch states */
       r->status = R_FILE;
     } else { /* Wrong kind of packet, send NAK */
       epkt("Unexpected packet type", k);
@@ -615,10 +637,11 @@ kermit(short f,                /* Function code */
     freerslot(k, r_slot); /* Free packet slot */
     return (rc);
 
-  case R_FILE:                               /* Want an F or B packet */
-    if (t == 'F') {                          /* File name */
-      if ((rc = decode(k, r, 0, p)) == X_OK) /* Decode and save */
-        k->state = R_ATTR;                   /* Switch to next state */
+  case R_FILE:                                 /* Want an F or B packet */
+    if (t == 'F') {                            /* File name */
+      if ((rc = decode(k, r, 0, p)) == X_OK) { /* Decode and save */
+        k->state = R_ATTR;                     /* Switch to next state */
+      }
       r->status = k->state;
       debug(DB_LOG, "R_FILE decode rc", 0, rc);
       debug(DB_LOG, "R_FILE FILENAME", r->filename, 0);
@@ -646,8 +669,9 @@ kermit(short f,                /* Function code */
     if (t == 'A') { /* Attribute packet */
       int x;
       x = gattr(k, p, r); /* Read the attributes */
-      if (x > -1)
+      if (x > -1) {
         k->binary = x;
+      }
       freerslot(k, r_slot);
       ack(k, k->r_seq, (UCHAR *)"Y"); /* Always accept the file */
       return (X_OK);
@@ -667,10 +691,11 @@ kermit(short f,                /* Function code */
           freerslot(k, r_slot);
           return (rc);
         }
-        if (rc == X_OK)
+        if (rc == X_OK) {
           rc = ack(k, k->r_seq, s);
-        else
+        } else {
           epkt("Error writing data", k);
+        }
         return (rc);
       } else if (t == 'Z') { /* Empty file */
         debug(DB_LOG, "R_ATTR empty file", r->filename, 0);
@@ -713,8 +738,9 @@ kermit(short f,                /* Function code */
         r->sofar += k->obufpos;
         k->obufpos = 0;
       }
-      if (((rc = (*(k->closef))(k, *p, 2)) == X_OK) && (rc == X_OK))
+      if (((rc = (*(k->closef))(k, *p, 2)) == X_OK) && (rc == X_OK)) {
         k->state = R_FILE;
+      }
       debug(DB_LOG, "R_DATA closef rc", 0, rc);
       r->status = k->state;
       freerslot(k, r_slot);
@@ -722,10 +748,11 @@ kermit(short f,                /* Function code */
       epkt("Unexpected packet type", k);
       return (X_ERROR);
     }
-    if (rc == X_OK)
+    if (rc == X_OK) {
       rc = ack(k, k->r_seq, s);
-    else
+    } else {
       epkt(t == 'Z' ? "Can't close file" : "Error writing data", k);
+    }
     return (rc);
 
   case R_ERROR: /* Canceled from above */
@@ -815,8 +842,9 @@ STATIC int chk1(UCHAR *pkt, struct k_data *k) {
 
 STATIC USHORT chk2(UCHAR *pkt, struct k_data *k) {
   register USHORT chk;
-  for (chk = 0; *pkt != '\0'; pkt++)
+  for (chk = 0; *pkt != '\0'; pkt++) {
     chk += *pkt;
+  }
   return (chk);
 }
 
@@ -859,8 +887,9 @@ STATIC int spkt(char typ, short seq, int len, UCHAR *data, struct k_data *k) {
   if (len < 0) { /* Calculate data length ourselves? */
     len = 0;
     s = data;
-    while (*s++)
+    while (*s++) {
       len++;
+    }
   }
   debug(DB_LOG, "spkt len 2", 0, len);
   buf = k->opktbuf; /* Where to put packet (FOR NOW) */
@@ -883,10 +912,12 @@ STATIC int spkt(char typ, short seq, int len, UCHAR *data, struct k_data *k) {
     buf[lenpos] = tochar(j + 2); /* Single-byte length in LEN field */
 #ifdef F_LP
   }
-#endif      /* F_LP */
-  if (data) /* Copy data, if any */
-    for (; len--; i++)
+#endif        /* F_LP */
+  if (data) { /* Copy data, if any */
+    for (; len--; i++) {
       buf[i] = *data++;
+    }
+  }
   buf[i] = '\0';
 
 #ifdef F_CRC
@@ -956,8 +987,9 @@ STATIC int spkt(char typ, short seq, int len, UCHAR *data, struct k_data *k) {
 STATIC int nak(struct k_data *k, short seq, short slot) {
   int rc;
   rc = spkt('N', seq, 0, (UCHAR *)0, k);
-  if (k->ipktinfo[slot].rtr++ > k->retry)
+  if (k->ipktinfo[slot].rtr++ > k->retry) {
     rc = X_ERROR;
+  }
   return (rc);
 }
 
@@ -974,8 +1006,9 @@ STATIC int ack(struct k_data *k, short seq, UCHAR *text) {
   }
   rc = spkt('Y', seq, len, text, k); /* Send the packet */
   debug(DB_LOG, "ack spkt rc", 0, rc);
-  if (rc == X_OK)                   /* If OK */
+  if (rc == X_OK) {                 /* If OK */
     k->r_seq = (k->r_seq + 1) % 64; /* bump the packet number */
+  }
   return (rc);
 }
 
@@ -987,25 +1020,30 @@ STATIC void spar(struct k_data *k, UCHAR *s, int datalen) {
 
   s--; /* Line up with field numbers. */
 
-  if (datalen >= 1) /* Max packet length to send */
+  if (datalen >= 1) { /* Max packet length to send */
     k->s_maxlen = xunchar(s[1]);
+  }
 
-  if (datalen >= 2) /* Timeout on inbound packets */
+  if (datalen >= 2) { /* Timeout on inbound packets */
     k->r_timo = xunchar(s[2]);
+  }
 
   /* No padding */
 
-  if (datalen >= 5) /* Outbound Packet Terminator */
+  if (datalen >= 5) { /* Outbound Packet Terminator */
     k->s_eom = xunchar(s[5]);
+  }
 
-  if (datalen >= 6) /* Incoming control prefix */
+  if (datalen >= 6) { /* Incoming control prefix */
     k->r_ctlq = s[6];
+  }
 
   if (datalen >= 7) { /* 8th bit prefix */
     k->ebq = s[7];
     if ((s[7] > 32 && s[7] < 63) || (s[7] > 95 && s[7] < 127)) {
-      if (!k->parity)  /* They want it */
-        k->parity = 1; /* Set parity to something nonzero */
+      if (!k->parity) { /* They want it */
+        k->parity = 1;  /* Set parity to something nonzero */
+      }
       k->ebqflg = 1;
     } else if (s[7] == 'Y' && k->parity) {
       k->ebqflg = 1;
@@ -1020,8 +1058,9 @@ STATIC void spar(struct k_data *k, UCHAR *s, int datalen) {
     if ((k->bct < 1) || (k->bct > 3))
 #endif /* F_CRC */
       k->bct = 1;
-    if (k->bctf)
+    if (k->bctf) {
       k->bct = 3;
+    }
   }
   if (datalen >= 9) { /* Repeat counts */
     if ((s[9] > 32 && s[9] < 63) || (s[9] > 95 && s[9] < 127)) {
@@ -1068,8 +1107,9 @@ STATIC void spar(struct k_data *k, UCHAR *s, int datalen) {
     if (datalen > y + 1) {
       x = xunchar(s[y + 2]) * 95 + xunchar(s[y + 3]);
       k->s_maxlen = (x > P_PKTLEN) ? P_PKTLEN : x;
-      if (k->s_maxlen < 10)
+      if (k->s_maxlen < 10) {
         k->s_maxlen = 60;
+      }
     }
   }
 #endif /* F_LP */
@@ -1081,11 +1121,14 @@ STATIC void spar(struct k_data *k, UCHAR *s, int datalen) {
     if (datalen > y) {
       x = xunchar(s[y + 1]);
       k->window = (x > P_WSLOTS) ? P_WSLOTS : x;
-      if (k->window < 1) /* Watch out for bad negotiation */
+      if (k->window < 1) { /* Watch out for bad negotiation */
         k->window = 1;
-      if (k->window > 1)
-        if (k->window > k->retry)   /* Retry limit must be greater */
+      }
+      if (k->window > 1) {
+        if (k->window > k->retry) { /* Retry limit must be greater */
           k->retry = k->window + 1; /* than window size. */
+        }
+      }
     }
   }
 #endif /* F_SW */
@@ -1100,21 +1143,23 @@ STATIC int rpar(struct k_data *k, char type) {
   short b;
 #endif /* F_CRC */
 
-  d = k->ack_s;                       /* Where to put it */
-  d[0] = tochar(94);                  /* Maximum short-packet length */
-  d[1] = tochar(k->s_timo);           /* When I want to be timed out */
-  d[2] = tochar(0);                   /* How much padding I need */
-  d[3] = ctl(0);                      /* Padding character I want */
-  d[4] = tochar(k->r_eom);            /* End-of message character I want */
-  d[5] = k->s_ctlq;                   /* Control prefix I send */
-  if ((k->ebq == 'Y') && (k->parity)) /* 8th-bit prefix */
-    d[6] = k->ebq = '&';              /* I need to request it */
-  else                                /* else just agree with other Kermit */
+  d = k->ack_s;                         /* Where to put it */
+  d[0] = tochar(94);                    /* Maximum short-packet length */
+  d[1] = tochar(k->s_timo);             /* When I want to be timed out */
+  d[2] = tochar(0);                     /* How much padding I need */
+  d[3] = ctl(0);                        /* Padding character I want */
+  d[4] = tochar(k->r_eom);              /* End-of message character I want */
+  d[5] = k->s_ctlq;                     /* Control prefix I send */
+  if ((k->ebq == 'Y') && (k->parity)) { /* 8th-bit prefix */
+    d[6] = k->ebq = '&';                /* I need to request it */
+  } else {                              /* else just agree with other Kermit */
     d[6] = k->ebq;
-  if (k->bctf)  /* Block check type */
-    d[7] = '5'; /* FORCE 3 */
-  else
-    d[7] = k->bct + '0';     /* Normal */
+  }
+  if (k->bctf) { /* Block check type */
+    d[7] = '5';  /* FORCE 3 */
+  } else {
+    d[7] = k->bct + '0'; /* Normal */
+  }
   d[8] = k->rptq;            /* Repeat prefix */
   d[9] = tochar(k->capas);   /* Capability bits */
   d[10] = tochar(k->window); /* Window size */
@@ -1176,9 +1221,10 @@ STATIC int decode(struct k_data *k, struct k_response *r, short f,
   UCHAR *p;
 
   rc = X_OK;
-  rpt = 0;    /* Initialize repeat count. */
-  if (f == 0) /* Output function... */
+  rpt = 0;      /* Initialize repeat count. */
+  if (f == 0) { /* Output function... */
     p = r->filename;
+  }
 
   while ((a = *inbuf++ & 0xFF) != '\0') { /* Character loop */
     if (k->rptflg && a == k->rptq) {      /* Got a repeat prefix? */
@@ -1190,16 +1236,18 @@ STATIC int decode(struct k_data *k, struct k_response *r, short f,
       b8 = 0200;                      /* Yes, flag the 8th bit */
       a = *inbuf++ & 0x7F;            /* and get the prefixed character. */
     }
-    if (a == k->r_ctlq) {                          /* If control prefix, */
-      a = *inbuf++ & 0xFF;                         /* get its operand */
-      a7 = a & 0x7F;                               /* and its low 7 bits. */
-      if ((a7 >= 0100 && a7 <= 0137) || a7 == '?') /* Controllify */
-        a = ctl(a);                                /* if in control range. */
+    if (a == k->r_ctlq) {                            /* If control prefix, */
+      a = *inbuf++ & 0xFF;                           /* get its operand */
+      a7 = a & 0x7F;                                 /* and its low 7 bits. */
+      if ((a7 >= 0100 && a7 <= 0137) || a7 == '?') { /* Controllify */
+        a = ctl(a);                                  /* if in control range. */
+      }
     }
     a |= b8; /* OR in the 8th bit */
 
-    if (rpt == 0)
+    if (rpt == 0) {
       rpt = 1; /* If no repeats, then one */
+    }
 
     for (; rpt > 0; rpt--) { /* Output the char 'rpt' times */
       if (f == 0) {
@@ -1209,15 +1257,17 @@ STATIC int decode(struct k_data *k, struct k_response *r, short f,
         if (k->obufpos == k->obuflen) {                /* Buffer full? */
           rc = (*(k->writef))(k, k->obuf, k->obuflen); /* Dump it. */
           r->sofar += k->obuflen;
-          if (rc != X_OK)
+          if (rc != X_OK) {
             break;
+          }
           k->obufpos = 0;
         }
       }
     }
   }
-  if (f == 0)  /* If writing to memory */
-    *p = '\0'; /* terminate the string */
+  if (f == 0) { /* If writing to memory */
+    *p = '\0';  /* terminate the string */
+  }
   return (rc);
 }
 
@@ -1225,10 +1275,12 @@ STATIC ULONG /* Convert decimal string to number  */
 stringnum(UCHAR *s, struct k_data *k) {
   long n;
   n = 0L;
-  while (*s == SP)
+  while (*s == SP) {
     s++;
-  while (*s >= '0' && *s <= '9')
+  }
+  while (*s >= '0' && *s <= '9') {
     n = n * 10 + (*s++ - '0');
+  }
   return (n);
 }
 
@@ -1240,8 +1292,9 @@ numstring(ULONG n, UCHAR *buf, int buflen, struct k_data *k) {
     x = n % 10L;
     buf[i] = x + '0';
     n /= 10L;
-    if (!n)
+    if (!n) {
       break;
+    }
   }
   if (n) {
     return ((UCHAR *)0);
@@ -1281,39 +1334,46 @@ STATIC int gattr(struct k_data *k, UCHAR *s, struct k_response *r) {
   while ((c = *s++)) {   /* Get attribute tag */
     aln = xunchar(*s++); /* Length of attribute string */
     switch (c) {
-    case '!':                                       /* File length in K */
-    case '"':                                       /* File type */
-      for (i = 0; (i < aln) && (i < SIZEBUFL); i++) /* Copy it */
+    case '!':                                         /* File length in K */
+    case '"':                                         /* File type */
+      for (i = 0; (i < aln) && (i < SIZEBUFL); i++) { /* Copy it */
         sizebuf[i] = *s++;
+      }
       sizebuf[i] = '\0'; /* Terminate with null */
-      if (i < aln)
-        s += (aln - i);                 /* If field was too long for buffer */
+      if (i < aln) {
+        s += (aln - i); /* If field was too long for buffer */
+      }
       if (c == '!') {                   /* Length */
         fsizek = stringnum(sizebuf, k); /* Convert to number */
       } else {                          /* Type */
-        if (sizebuf[0] == 'A')          /* Text */
+        if (sizebuf[0] == 'A') {        /* Text */
           rc = 0;
-        else if (sizebuf[0] == 'B') /* Binary */
+        } else if (sizebuf[0] == 'B') { /* Binary */
           rc = 1;
+        }
         debug(DB_LOG, "gattr rc", 0, rc);
         debug(DB_LOG, "gattr size", sizebuf, 0);
       }
       break;
 
     case '#': /* File creation date */
-      for (i = 0; (i < aln) && (i < DATE_MAX); i++)
+      for (i = 0; (i < aln) && (i < DATE_MAX); i++) {
         r->filedate[i] = *s++; /* Copy it into a static string */
-      if (i < aln)
+      }
+      if (i < aln) {
         s += (aln - i);
+      }
       r->filedate[i] = '\0';
       break;
 
-    case '1':                                       /* File length in bytes */
-      for (i = 0; (i < aln) && (i < SIZEBUFL); i++) /* Copy it */
+    case '1':                                         /* File length in bytes */
+      for (i = 0; (i < aln) && (i < SIZEBUFL); i++) { /* Copy it */
         sizebuf[i] = *s++;
+      }
       sizebuf[i] = '\0'; /* Terminate with null */
-      if (i < aln)
+      if (i < aln) {
         s += (aln - i);
+      }
       fsize = stringnum(sizebuf, k); /* Convert to number */
       break;
 
@@ -1379,8 +1439,9 @@ STATIC int sattr(struct k_data *k,
       if (i + x < ATTRLEN - 3) { /* Don't overflow buffer */
         k->xdata[i++] = '1';     /* Length-in-Bytes attribute */
         k->xdata[i++] = tochar(x);
-        while (*p)
+        while (*p) {
           k->xdata[i++] = *p++;
+        }
       }
     }
   }
@@ -1393,11 +1454,13 @@ STATIC int sattr(struct k_data *k,
     if (i + x < ATTRLEN - 3) {   /* If it will fit */
       k->xdata[i++] = '#';       /* Add modtime attribute */
       k->xdata[i++] = tochar(x); /* Its length */
-      while (*p)                 /* And itself */
+      while (*p) {               /* And itself */
         k->xdata[i++] = *p++;
+      }
       /* Also copy modtime to result struct */
-      for (x = 0; x < DATE_MAX - 1 && datebuf[x]; x++)
+      for (x = 0; x < DATE_MAX - 1 && datebuf[x]; x++) {
         r->filedate[x] = datebuf[x];
+      }
       r->filedate[x] = '\0';
     }
   }
@@ -1423,8 +1486,9 @@ STATIC int getpkt(struct k_data *k,
     k->s_remain[0] = '\0';           /* discard any old leftovers. */
     if (k->istring) {                /* Get first byte. */
       c = *(k->istring)++;           /* Of memory string... */
-      if (!c)
+      if (!c) {
         c = -1;
+      }
     } else { /* or file... */
 #ifdef DEBUG
       k->zincnt = -1234;
@@ -1433,8 +1497,9 @@ STATIC int getpkt(struct k_data *k,
       c = zgetc();
 
 #ifdef DEBUG
-      if (k->dummy)
+      if (k->dummy) {
         debug(DB_LOG, "DUMMY CLOBBERED (A)", 0, 0);
+      }
 #endif /* DEBUG */
     }
     if (c < 0) { /* Watch out for empty file. */
@@ -1451,23 +1516,26 @@ STATIC int getpkt(struct k_data *k,
        (k->size)++)
     ;
   k->s_remain[0] = '\0';
-  if (k->s_first == -1)
+  if (k->s_first == -1) {
     return (k->size);
+  }
 
   rpt = 0;                  /* Initialize repeat counter. */
   while (k->s_first > -1) { /* Until end of file or string... */
     if (k->istring) {
       next = *(k->istring)++;
-      if (!next)
+      if (!next) {
         next = -1;
+      }
     } else {
 #ifdef DEBUG
       k->dummy = 0;
 #endif /* DEBUG */
       next = zgetc();
 #ifdef DEBUG
-      if (k->dummy)
+      if (k->dummy) {
         debug(DB_LOG, "DUMMY CLOBBERED B", 0, k->dummy);
+      }
 #endif /* DEBUG */
     }
     if (next < 0) { /* If none, we're at EOF. */
@@ -1480,8 +1548,9 @@ STATIC int getpkt(struct k_data *k,
     /* k->xdata[k->size] = '\0'; */
     c = next; /* Old next char is now current. */
 
-    if (k->size == maxlen) /* Just at end, done. */
+    if (k->size == maxlen) { /* Just at end, done. */
       return (k->size);
+    }
 
     if (k->size > maxlen) { /* Past end, must save some. */
       for (i = 0; (k->s_remain[i] = k->xdata[(k->osize) + i]) != '\0'; i++)
@@ -1504,8 +1573,9 @@ STATIC int sdata(struct k_data *k,
   }
   len = getpkt(k, r); /* Fill data field from input file */
   debug(DB_LOG, "sdata getpkt", 0, len);
-  if (len < 1)
+  if (len < 1) {
     return (0);
+  }
   rc = spkt('D', k->s_seq, len, k->xdata, k); /* Send the packet */
   debug(DB_LOG, "sdata spkt", 0, rc);
   return ((rc == X_ERROR) ? rc : len);
@@ -1557,8 +1627,9 @@ STATIC void encode(int a, int next,
     } else if (k->s_rpt == 1) { /* Run broken, only two? */
       k->s_rpt = 0;             /* Yes, do the character twice */
       encode(a, -1, k);         /* by calling self recursively. */
-      if (k->size <= maxlen)    /* Watch boundary. */
+      if (k->size <= maxlen) {  /* Watch boundary. */
         k->osize = k->size;
+      }
       k->s_rpt = 0; /* Call self second time. */
       encode(a, -1, k);
       return;
@@ -1575,15 +1646,16 @@ STATIC void encode(int a, int next,
     k->xdata[(k->size)++] = k->ebq; /* and 8th bit on, insert prefix */
     a = a7;                         /* and clear the 8th bit. */
   }
-  if (a7 < 32 || a7 == 127) {          /* If in control range */
-    k->xdata[(k->size)++] = k->s_ctlq; /* insert control prefix */
-    a = ctl(a);                        /* and make character printable. */
-  } else if (a7 == k->s_ctlq)          /* If data is control prefix, */
-    k->xdata[(k->size)++] = k->s_ctlq; /* prefix it. */
-  else if (k->ebqflg && a7 == k->ebq)  /* If doing 8th-bit prefixing, */
-    k->xdata[(k->size)++] = k->s_ctlq; /* ditto for 8th-bit prefix. */
-  else if (k->rptflg && a7 == k->rptq) /* If doing run-length encoding, */
-    k->xdata[(k->size)++] = k->s_ctlq; /* ditto for repeat prefix. */
+  if (a7 < 32 || a7 == 127) {              /* If in control range */
+    k->xdata[(k->size)++] = k->s_ctlq;     /* insert control prefix */
+    a = ctl(a);                            /* and make character printable. */
+  } else if (a7 == k->s_ctlq) {            /* If data is control prefix, */
+    k->xdata[(k->size)++] = k->s_ctlq;     /* prefix it. */
+  } else if (k->ebqflg && a7 == k->ebq) {  /* If doing 8th-bit prefixing, */
+    k->xdata[(k->size)++] = k->s_ctlq;     /* ditto for 8th-bit prefix. */
+  } else if (k->rptflg && a7 == k->rptq) { /* If doing run-length encoding, */
+    k->xdata[(k->size)++] = k->s_ctlq;     /* ditto for repeat prefix. */
+  }
 
   k->xdata[(k->size)++] = a;  /* Finally, emit the character. */
   k->xdata[(k->size)] = '\0'; /* Terminate string with null. */
@@ -1597,8 +1669,9 @@ STATIC int nxtpkt(struct k_data *k) { /* Get next packet to send */
 
 STATIC int resend(struct k_data *k) {
   UCHAR *buf;
-  if (!k->opktlen) /* Nothing to resend */
+  if (!k->opktlen) { /* Nothing to resend */
     return (X_OK);
+  }
   buf = k->opktbuf;
   debug(DB_PKT, ">PKT", &buf[1], k->opktlen);
   return ((*(k->txd))(k, buf, k->opktlen));

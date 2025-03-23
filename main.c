@@ -100,10 +100,12 @@ void doexit(int status) {
 void fatal(char *msg1, char *msg2, char *msg3) { /* Not to be called except */
   if (msg1) {                                    /* from this module */
     printf("%s: %s", xname, msg1);
-    if (msg2)
+    if (msg2) {
       printf("%s", msg2);
-    if (msg3)
+    }
+    if (msg3) {
       printf("%s", msg3);
+    }
     printf("\n");
   }
   doexit(FAILURE);
@@ -173,10 +175,12 @@ int main(int argc, char **argv) {
   debug(DB_LOG, "init status:", 0, status);
   debug(DB_LOG, "E-Kermit version:", k.version, 0);
 #endif /* DEBUG */
-  if (status == X_ERROR)
+  if (status == X_ERROR) {
     doexit(FAILURE);
-  if (action == A_SEND)
+  }
+  if (action == A_SEND) {
     status = kermit(K_SEND, &k, 0, 0, "", &r);
+  }
   /*
     Now we read a packet ourselves and call Kermit with it.  Normally, Kermit
     would read its own packets, but in the embedded context, the device must be
@@ -209,8 +213,9 @@ int main(int argc, char **argv) {
     */
     if (rx_len < 1) {        /* No data was read */
       freerslot(&k, r_slot); /* So free the window slot */
-      if (rx_len < 0)        /* If there was a fatal error */
+      if (rx_len < 0) {      /* If there was a fatal error */
         doexit(FAILURE);     /* give up */
+      }
 
       /* This would be another place to dispatch to another task */
       /* while waiting for a Kermit packet to show up. */
