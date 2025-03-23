@@ -9,11 +9,12 @@ INCLUDE  = ${HOME}/bin/llvm-mos/mos-platform/neo6502/include
 CFLAGS = -Os -I${INCLUDE}
 
 OBJS = main.o kermit.o neoio.o
+TARGET = kermit.neo
 
-all: neok
+all: ${TARGET}
  
-neok: $(OBJS)
-	$(CC) $(CFLAGS) -o neok $(OBJS)
+kermit.neo: $(OBJS)
+	$(CC) $(CFLAGS) -o ${TARGET} $(OBJS)
 
 #Dependencies
 
