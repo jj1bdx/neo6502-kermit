@@ -40,9 +40,9 @@
   STUFF to see the real stuff.  ANSI C required.  Note: order of the
   following includes is important.
 */
-#include "cdefs.h"    /* Data types for all modules */
-#include "debug.h"    /* Debugging */
-#include "kermit.h"   /* Kermit symbols and data structures */
+#include "cdefs.h"  /* Data types for all modules */
+#include "debug.h"  /* Debugging */
+#include "kermit.h" /* Kermit symbols and data structures */
 
 #ifdef __linux__
 #include <ctype.h>

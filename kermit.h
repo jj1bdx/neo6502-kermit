@@ -65,10 +65,10 @@
 #define NEO6502
 
 #ifdef NEO6502
-#define NO_LP /* No long packets */
-#define NO_SCAN /* We don't need F_SCAN, transparent file only */
+#define NO_LP     /* No long packets */
+#define NO_SCAN   /* We don't need F_SCAN, transparent file only */
 #define FN_MAX 12 /* DOS 8.3 format */
-#endif /* NEO6502 */
+#endif            /* NEO6502 */
 
 /* XAC compiler for Philips XAG30 microprocessor */
 /* See http://www.columbia.edu/kermit/em-apex.html */
@@ -310,105 +310,105 @@
 #define I_GROUP 2 /* Cancel group */
 
 struct packet {
-  int len;    /* Length */
-  short seq;  /* Sequence number */
-  char typ;   /* Type */
-  short rtr;  /* Retry count */
-  UCHAR *dat; /* Pointer to data */
-  short flg;  /* Flags */
+    int len;    /* Length */
+    short seq;  /* Sequence number */
+    char typ;   /* Type */
+    short rtr;  /* Retry count */
+    UCHAR* dat; /* Pointer to data */
+    short flg;  /* Flags */
 };
 
-struct k_data {         /* The Kermit data structure */
-  UCHAR *version;       /* Version number of Kermit module */
-  short remote;         /* 0 = local, 1 = remote */
-  short xfermode;       /* 0 = automatic, 1 = manual */
-  short binary;         /* 0 = text, 1 = binary */
-  short state;          /* Kermit protocol state */
-  short what;           /* Action (send or receive) */
-  short s_first;        /* Enocode at beginning of file */
-  short s_next;         /* Encode lookahead byte */
-  short s_seq;          /* Sequence number sent */
-  short r_seq;          /* Sequence number received */
-  short s_type;         /* Packet type sent */
-  short r_type;         /* Packet type received */
-  short s_soh;          /* Packet start sent */
-  short r_soh;          /* Packet start received */
-  short s_eom;          /* Packet end sent */
-  short r_eom;          /* Packet end received */
-  int size;             /* Current size of output pkt data */
-  int osize;            /* Previous output packet data size */
-  int r_timo;           /* Receive and send timers */
-  int s_timo;           /* ... */
-  int r_maxlen;         /* maximum packet length to receive */
-  int s_maxlen;         /* maximum packet length to send */
-  short window;         /* maximum window slots */
-  short wslots;         /* current window slots */
-  short parity;         /* 0 = none, nonzero = some */
-  short retry;          /* retry limit */
-  short cancel;         /* Cancellation */
-  short ikeep;          /* Keep incompletely received files */
-  char s_ctlq;          /* control-prefix out */
-  char r_ctlq;          /* control-prefix in */
-  char ebq;             /* 8-bit prefix */
-  char ebqflg;          /* 8-bit prefixing negotiated */
-  char rptq;            /* Repeat-count prefix */
-  int s_rpt;            /* Current repeat count */
-  short rptflg;         /* flag for repeat counts negotiated */
-  short bct;            /* Block-check type 1..3 */
-  unsigned short capas; /* Capability bits */
+struct k_data {           /* The Kermit data structure */
+    UCHAR* version;       /* Version number of Kermit module */
+    short remote;         /* 0 = local, 1 = remote */
+    short xfermode;       /* 0 = automatic, 1 = manual */
+    short binary;         /* 0 = text, 1 = binary */
+    short state;          /* Kermit protocol state */
+    short what;           /* Action (send or receive) */
+    short s_first;        /* Enocode at beginning of file */
+    short s_next;         /* Encode lookahead byte */
+    short s_seq;          /* Sequence number sent */
+    short r_seq;          /* Sequence number received */
+    short s_type;         /* Packet type sent */
+    short r_type;         /* Packet type received */
+    short s_soh;          /* Packet start sent */
+    short r_soh;          /* Packet start received */
+    short s_eom;          /* Packet end sent */
+    short r_eom;          /* Packet end received */
+    int size;             /* Current size of output pkt data */
+    int osize;            /* Previous output packet data size */
+    int r_timo;           /* Receive and send timers */
+    int s_timo;           /* ... */
+    int r_maxlen;         /* maximum packet length to receive */
+    int s_maxlen;         /* maximum packet length to send */
+    short window;         /* maximum window slots */
+    short wslots;         /* current window slots */
+    short parity;         /* 0 = none, nonzero = some */
+    short retry;          /* retry limit */
+    short cancel;         /* Cancellation */
+    short ikeep;          /* Keep incompletely received files */
+    char s_ctlq;          /* control-prefix out */
+    char r_ctlq;          /* control-prefix in */
+    char ebq;             /* 8-bit prefix */
+    char ebqflg;          /* 8-bit prefixing negotiated */
+    char rptq;            /* Repeat-count prefix */
+    int s_rpt;            /* Current repeat count */
+    short rptflg;         /* flag for repeat counts negotiated */
+    short bct;            /* Block-check type 1..3 */
+    unsigned short capas; /* Capability bits */
 #ifdef F_CRC
-  USHORT crcta[16];                      /* CRC generation table A */
-  USHORT crctb[16];                      /* CRC generation table B */
-#endif                                   /* F_CRC */
-  UCHAR s_remain[6];                     /* Send data leftovers */
-  UCHAR ipktbuf[P_PKTLEN + 8][P_WSLOTS]; /* Buffers for incoming packets */
-  struct packet ipktinfo[P_WSLOTS];      /* Incoming packet info */
+    USHORT crcta[16];                      /* CRC generation table A */
+    USHORT crctb[16];                      /* CRC generation table B */
+#endif                                     /* F_CRC */
+    UCHAR s_remain[6];                     /* Send data leftovers */
+    UCHAR ipktbuf[P_PKTLEN + 8][P_WSLOTS]; /* Buffers for incoming packets */
+    struct packet ipktinfo[P_WSLOTS];      /* Incoming packet info */
 #ifdef COMMENT
-  UCHAR opktbuf[P_PKTLEN + 8][P_WSLOTS]; /* Buffers for outbound packets */
+    UCHAR opktbuf[P_PKTLEN + 8][P_WSLOTS]; /* Buffers for outbound packets */
 #else
-  UCHAR opktbuf[P_PKTLEN + 8];  /* Outbound packet buffer */
-  int opktlen;                  /* Outbound packet length */
-  UCHAR xdatabuf[P_PKTLEN + 2]; /* Buffer for building data field */
-#endif                              /* COMMENT */
-  struct packet opktinfo[P_WSLOTS]; /* Outbound packet info */
-  UCHAR *xdata;                     /* Pointer to data field of outpkt */
+    UCHAR opktbuf[P_PKTLEN + 8];  /* Outbound packet buffer */
+    int opktlen;                  /* Outbound packet length */
+    UCHAR xdatabuf[P_PKTLEN + 2]; /* Buffer for building data field */
+#endif                                /* COMMENT */
+    struct packet opktinfo[P_WSLOTS]; /* Outbound packet info */
+    UCHAR* xdata;                     /* Pointer to data field of outpkt */
 #ifdef F_TSW
-  short r_pw[64];        /* Packet Seq.No. to window-slot map */
-  short s_pw[64];        /* Packet Seq.No. to window-slot map */
-#endif                   /* F_TSW */
-  UCHAR ack_s[IDATALEN]; /* Our own init parameter string */
-  UCHAR *obuf;
-  int rx_avail;     /* Comms bytes available for reading */
-  int obuflen;      /* Length of output file buffer */
-  int obufpos;      /* Output file buffer position */
-  UCHAR **filelist; /* List of files to send */
-  UCHAR *dir;       /* Directory */
-  UCHAR *filename;  /* Name of current file */
-  UCHAR *istring;   /* Pointer to string to encode from */
-  UCHAR *ostring;   /* Pointer to string to decode to */
-  int (*rxd)(struct k_data *, UCHAR *, int);   /* Comms read function */
-  int (*txd)(struct k_data *, UCHAR *, int);   /* and comms write function */
-  int (*ixd)(struct k_data *);                 /* and comms info function */
-  int (*openf)(struct k_data *, UCHAR *, int); /* open-file function  */
-  ULONG (*finfo)(struct k_data *, UCHAR *, UCHAR *, int, short *, short);
-  int (*readf)(struct k_data *);                /* read-file function  */
-  int (*writef)(struct k_data *, UCHAR *, int); /* write-file function */
-  int (*closef)(struct k_data *, UCHAR, int);   /* close-file function */
-  void (*dbf)(int, UCHAR *, UCHAR *, long);     /* debug function */
-  UCHAR *zinbuf;                                /* Input file buffer itself */
-  int zincnt;                                   /* Input buffer position */
-  int zinlen;    /* Length of input file buffer */
-  UCHAR *zinptr; /* Pointer to input file buffer */
-  int bctf;      /* Flag to force type 3 block check */
-  int dummy;
+    short r_pw[64];        /* Packet Seq.No. to window-slot map */
+    short s_pw[64];        /* Packet Seq.No. to window-slot map */
+#endif                     /* F_TSW */
+    UCHAR ack_s[IDATALEN]; /* Our own init parameter string */
+    UCHAR* obuf;
+    int rx_avail;                              /* Comms bytes available for reading */
+    int obuflen;                               /* Length of output file buffer */
+    int obufpos;                               /* Output file buffer position */
+    UCHAR** filelist;                          /* List of files to send */
+    UCHAR* dir;                                /* Directory */
+    UCHAR* filename;                           /* Name of current file */
+    UCHAR* istring;                            /* Pointer to string to encode from */
+    UCHAR* ostring;                            /* Pointer to string to decode to */
+    int (*rxd)(struct k_data*, UCHAR*, int);   /* Comms read function */
+    int (*txd)(struct k_data*, UCHAR*, int);   /* and comms write function */
+    int (*ixd)(struct k_data*);                /* and comms info function */
+    int (*openf)(struct k_data*, UCHAR*, int); /* open-file function  */
+    ULONG (*finfo)(struct k_data*, UCHAR*, UCHAR*, int, short*, short);
+    int (*readf)(struct k_data*);               /* read-file function  */
+    int (*writef)(struct k_data*, UCHAR*, int); /* write-file function */
+    int (*closef)(struct k_data*, UCHAR, int);  /* close-file function */
+    void (*dbf)(int, UCHAR*, UCHAR*, long);     /* debug function */
+    UCHAR* zinbuf;                              /* Input file buffer itself */
+    int zincnt;                                 /* Input buffer position */
+    int zinlen;                                 /* Length of input file buffer */
+    UCHAR* zinptr;                              /* Pointer to input file buffer */
+    int bctf;                                   /* Flag to force type 3 block check */
+    int dummy;
 };
 
-struct k_response {         /* Report from Kermit */
-  short status;             /* Current status */
-  UCHAR filename[FN_MAX];   /* Name of current file */
-  UCHAR filedate[DATE_MAX]; /* Date of file */
-  long filesize;            /* Size of file */
-  long sofar;               /* Bytes transferred so far */
+struct k_response {           /* Report from Kermit */
+    short status;             /* Current status */
+    UCHAR filename[FN_MAX];   /* Name of current file */
+    UCHAR filedate[DATE_MAX]; /* Date of file */
+    long filesize;            /* Size of file */
+    long sofar;               /* Bytes transferred so far */
 };
 
 /* Macro definitions */
@@ -425,10 +425,10 @@ struct k_response {         /* Report from Kermit */
 
 /* Prototypes for kermit() functions */
 
-int kermit(short, struct k_data *, short, int, char *, struct k_response *);
-UCHAR *getrslot(struct k_data *, short *);
-UCHAR *getsslot(struct k_data *, short *);
-void freerslot(struct k_data *, short);
-void freesslot(struct k_data *, short);
+int kermit(short, struct k_data*, short, int, char*, struct k_response*);
+UCHAR* getrslot(struct k_data*, short*);
+UCHAR* getsslot(struct k_data*, short*);
+void freerslot(struct k_data*, short);
+void freesslot(struct k_data*, short);
 
 #endif /* __KERMIT_H__ */

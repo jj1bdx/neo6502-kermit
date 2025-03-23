@@ -3,7 +3,7 @@
 // Author: Kenji Rikitake
 // Copyright (C) 2025 by Kenji Rikitake.
 // This file follows BSD 3-Clause License.
-// 
+//
 // Based on unixio.c:
 // Author: Frank da Cruz.
 // Copyright (C) 1995, 2011.
@@ -35,8 +35,8 @@
 
 // NOTE: stdio is unavailable on Neo6502!
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include <neo/api.h>
 
@@ -54,7 +54,7 @@ UCHAR i_buf[IBUFLEN + 8]; /* File output buffer */
 // TODO: Can output be a file?
 
 #ifdef DEBUG
-static int xdebug = 0;       /* Debugging on/off */
+static int xdebug = 0; /* Debugging on/off */
 
 void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
   if (fc != DB_OPN && !xdebug)
@@ -93,14 +93,14 @@ void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
 //    k   - Kermit struct pointer
 //    p   - pointer to read buffer
 //    len - length of read buffer
-// 
+//
 // When reading a packet, this function looks for start of Kermit packet
 // (k->r_soh), then reads everything between it and the end of the packet
 // (k->r_eom) into the indicated buffer.  Returns the number of bytes read,
 // or:
 //    0   - timeout or other possibly correctable error;
 //   -1   - fatal error, such as loss of connection, or no buffer to read into.
-// 
+//
 // Timeout not implemented in this sample.
 
 int readpkt(struct k_data *k, UCHAR *p, int len, int fc) {
@@ -203,18 +203,18 @@ static uint8_t ochannel = CHANNEL_OUTPUT_FILE;
 int openfile(struct k_data *k, UCHAR *s, int mode) {
 
   switch (mode) {
-  case 1: /* Read */
+  case 1:                                        /* Read */
     neo_file_open(ichannel, (const char *)s, 0); // read-only
-    k->s_first = 1;        /* Set up for getkpt */
-    k->zinbuf[0] = '\0';   /* Initialize buffer */
-    k->zinptr = k->zinbuf; /* Set up buffer pointer */
-    k->zincnt = 0;         /* and count */
+    k->s_first = 1;                              /* Set up for getkpt */
+    k->zinbuf[0] = '\0';                         /* Initialize buffer */
+    k->zinptr = k->zinbuf;                       /* Set up buffer pointer */
+    k->zincnt = 0;                               /* and count */
     debug(DB_LOG, "openfile read ok", s, 0);
     return (X_OK);
 
-  case 2: /* Write (create) */
+  case 2:                                        /* Write (create) */
     neo_file_open(ochannel, (const char *)s, 3); // truncate and read-write
-    neo_file_close(ochannel); // close the file first
+    neo_file_close(ochannel);                    // close the file first
     neo_file_open(ochannel, (const char *)s, 1); // re-open for write-only
     debug(DB_LOG, "openfile write ok", s, 0);
     return (X_OK);
@@ -246,13 +246,13 @@ ULONG
 fileinfo(struct k_data *k, UCHAR *filename, UCHAR *buf, int buflen, short *type,
          short mode) {
   neo_file_stat_t stat;
-  
+
   if (!buf)
     return (X_ERROR);
   buf[0] = '\0'; // No datetime info
   if (buflen < 18)
     return (X_ERROR);
-  neo_file_stat((const char *)filename, &stat); 
+  neo_file_stat((const char *)filename, &stat);
 
 #ifdef F_SCAN
   if (!mode) { /* File type determination requested */
@@ -278,9 +278,9 @@ int readfile(struct k_data *k) {
       k->zincnt = neo_file_read(ichannel, k->zinbuf, k->zinlen);
       debug(DB_LOG, "readfile binary ok zincnt", 0, k->zincnt);
 
-    } else { /* Text mode needs LF/CRLF handling */
+    } else {    /* Text mode needs LF/CRLF handling */
       UCHAR ch; // character buffer
-      int c; /* Current character */
+      int c;    /* Current character */
 
       for (k->zincnt = 0; (k->zincnt < (k->zinlen - 2)); (k->zincnt)++) {
         if (neo_file_eof(ichannel)) {
@@ -311,7 +311,7 @@ int readfile(struct k_data *k) {
 }
 
 // Write data to file
-// 
+//
 // Call with:
 //   Kermit struct
 //   String pointer
@@ -362,7 +362,7 @@ int closefile(struct k_data *k, UCHAR c, int mode) {
   int rc = X_OK; /* Return code */
 
   switch (mode) {
-  case 1:       /* Closing input file */
+  case 1: /* Closing input file */
     debug(DB_LOG, "closefile (input)", k->filename, 0);
     neo_file_close(ichannel);
     break;
@@ -372,7 +372,7 @@ int closefile(struct k_data *k, UCHAR c, int mode) {
     debug(DB_LOG, "closefile (output) keep", 0, k->ikeep);
     neo_file_close(ochannel);
     if ((k->ikeep == 0) && /* Don't keep incomplete files */
-            (c == 'D')) {      /* This file was incomplete */
+        (c == 'D')) {      /* This file was incomplete */
       if (k->filename) {
         debug(DB_LOG, "deleting incomplete", k->filename, 0);
         neo_file_delete((const char *)k->filename); /* Delete it. */
