@@ -35,6 +35,7 @@
 
 // NOTE: stdio is unavailable on Neo6502!
 
+#include <stdio.h>
 #include <stdint.h>
 #include <neo/api.h>
 
@@ -45,57 +46,40 @@
 UCHAR o_buf[OBUFLEN + 8]; /* File output buffer */
 UCHAR i_buf[IBUFLEN + 8]; /* File output buffer */
 
+#define CHANNEL_INPUT_FILE (1)
+#define CHANNEL_OUTPUT_FILE (2)
+
 /* Debugging */
-// TODO: debugging should be done on console
-// Again: NO stdio
+// TODO: Can output be a file?
 
 #ifdef DEBUG
-static FILE *dp = (FILE *)0; /* Debug log */
 static int xdebug = 0;       /* Debugging on/off */
 
 void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
-
   if (fc != DB_OPN && !xdebug)
     return;
   if (!label)
     label = "";
-
   switch (fc) { /* Function code */
   case DB_OPN:  /* Open debug log */
-    if (dp)
-      fclose(dp);
-    if (!*label)
-      label = "debug.log";
-    dp = fopen(label, "w");
-    if (!dp) {
-      dp = stderr;
-    } else {
-      setbuf(dp, (char *)0);
-    }
     xdebug = 1;
-    fprintf(dp, "DEBUG LOG OPEN\n");
+    printf("DEBUG LOG OPEN\n");
     return;
   case DB_MSG: /* Write a message */
-    if (dp)
-      fprintf(dp, "%s\n", label);
+    printf("%s\n", label);
     return;
   case DB_CHR: /* Write label and character */
-    if (dp)
-      fprintf(dp, "%s=[%c]\n", label, (char)nval);
+    printf("%s=[%c]\n", label, (char)nval);
     return;
   case DB_PKT: /* Log a packet */
                /* (fill in later, fall thru for now...) */
   case DB_LOG: /* Write label and string or number */
-    if (sval && dp)
-      fprintf(dp, "%s[%s]\n", label, sval);
+    if (sval)
+      printf("%s[%s]\n", label, sval);
     else
-      fprintf(dp, "%s=%ld\n", label, nval);
+      printf("%s=%ld\n", label, nval);
     return;
   case DB_CLS: /* Close debug log */
-    if (dp) {
-      fclose(dp);
-      dp = (FILE *)0;
-    }
     xdebug = 0;
   }
 }
@@ -202,8 +186,8 @@ int tx_data(struct k_data *k, UCHAR *p, int n) {
 
 // Static variables
 
-uint8_t ichannel = 1;
-uint8_t ochannel = 2;
+static uint8_t ichannel = CHANNEL_INPUT_FILE;
+static uint8_t ochannel = CHANNEL_OUTPUT_FILE;
 
 // Open output file
 //  Call with:
@@ -239,122 +223,71 @@ int openfile(struct k_data *k, UCHAR *s, int mode) {
   }
 }
 
-/*  F I L E I N F O  --  Get info about existing file  */
-/*
-  Call with:
-    Pointer to filename
-    Pointer to buffer for date-time string
-    Length of date-time string buffer (must be at least 18 bytes)
-    Pointer to int file type:
-       0: Prevailing type is text.
-       1: Prevailing type is binary.
-    Transfer mode (0 = auto, 1 = manual):
-       0: Figure out whether file is text or binary and return type.
-       1: (nonzero) Don't try to figure out file type.
-  Returns:
-    X_ERROR on failure.
-    0L or greater on success == file length.
-    Date-time string set to yyyymmdd hh:mm:ss modtime of file.
-    If date can't be determined, first byte of buffer is set to NUL.
-    Type set to 0 (text) or 1 (binary) if mode == 0.
-*/
-#ifdef F_SCAN
-#define SCANBUF 1024
-#define SCANSIZ 49152
-#endif /* F_SCAN */
+// Get info about existing file.
+
+// Call with:
+//   Pointer to filename
+//   Pointer to buffer for date-time string (unused for Neo6502)
+//   Length of date-time string buffer (must be at least 18 bytes)
+//   Pointer to int file type:
+//      0: Prevailing type is text.
+//      1: Prevailing type is binary.
+//   Transfer mode (0 = auto, 1 = manual):
+//      0: Figure out whether file is text or binary and return type.
+//      1: (nonzero) Don't try to figure out file type.
+// Returns:
+//   X_ERROR on failure.
+//   0L or greater on success == file length.
+//   Date can't be determined; first byte of buffer is set to NUL.
+//   Type set to 0 (text) or 1 (binary) if mode == 0.
 
 ULONG
 fileinfo(struct k_data *k, UCHAR *filename, UCHAR *buf, int buflen, short *type,
          short mode) {
-  struct stat statbuf;
-  struct tm *timestamp, *localtime();
-
-#ifdef F_SCAN
-  FILE *fp;            /* File scan pointer */
-  char inbuf[SCANBUF]; /* and buffer */
-#endif                 /* F_SCAN */
-
+  neo_file_stat_t stat;
+  
   if (!buf)
     return (X_ERROR);
-  buf[0] = '\0';
+  buf[0] = '\0'; // No datetime info
   if (buflen < 18)
     return (X_ERROR);
-  if (stat(filename, &statbuf) < 0)
-    return (X_ERROR);
-  timestamp = localtime(&(statbuf.st_mtime));
-  sprintf(buf, "%04d%02d%02d %02d:%02d:%02d", timestamp->tm_year + 1900,
-          timestamp->tm_mon + 1, timestamp->tm_mday, timestamp->tm_hour,
-          timestamp->tm_min, timestamp->tm_sec);
+  neo_file_stat(filename, &stat); 
+
 #ifdef F_SCAN
-  /*
-    Here we determine if the file is text or binary if the transfer mode is
-    not forced.  This is an extremely crude sample, which diagnoses any file
-    that contains a control character other than HT, LF, FF, or CR as binary.
-    A more thorough content analysis can be done that accounts for various
-    character sets as well as various forms of Unicode (UTF-8, UTF-16, etc).
-    Or the diagnosis could be based wholly or in part on the filename.
-    etc etc.  Or the implementation could skip this entirely by not defining
-    F_SCAN and/or by always calling this routine with type set to -1.
-  */
   if (!mode) { /* File type determination requested */
-    int isbinary = 1;
-    fp = fopen(filename, "r"); /* Open the file for scanning */
-    if (fp) {
-      int n = 0, count = 0;
-      char c, *p;
-
-      debug(DB_LOG, "fileinfo scan ", filename, 0);
-
-      isbinary = 0;
-      while (count < SCANSIZ && !isbinary) { /* Scan this much */
-        n = fread(inbuf, 1, SCANBUF, fp);
-        if (n == EOF || n == 0)
-          break;
-        count += n;
-        p = inbuf;
-        while (n--) {
-          c = *p++;
-          if (c < 32 || c == 127) {
-            if (c != 9 &&  /* Tab */
-                c != 10 && /* LF */
-                c != 12 && /* FF */
-                c != 13) { /* CR */
-              isbinary = 1;
-              debug(DB_MSG, "fileinfo BINARY", 0, 0);
-              break;
-            }
-          }
-        }
-      }
-      fclose(fp);
-      *type = isbinary;
-    }
+    *type = 1; // always binary
   }
 #endif /* F_SCAN */
 
-  return ((ULONG)(statbuf.st_size));
+  return ((ULONG)(stat.size));
 }
 
-/*  R E A D F I L E  --  Read data from a file  */
+// Read data from a file
 
 int readfile(struct k_data *k) {
   if (!k->zinptr) {
 #ifdef DEBUG
-    fprintf(dp, "readfile ZINPTR NOT SET\n");
+    printf("readfile ZINPTR NOT SET\n");
 #endif /* DEBUG */
     return (X_ERROR);
   }
   if (k->zincnt < 1) { /* Nothing in buffer - must refill */
     if (k->binary) {   /* Binary - just read raw buffers */
       k->dummy = 0;
-      k->zincnt = fread(k->zinbuf, 1, k->zinlen, ifile);
+      k->zincnt = neo_file_read(ichannel, k->zinbuf, k->zinlen);
       debug(DB_LOG, "readfile binary ok zincnt", 0, k->zincnt);
 
     } else { /* Text mode needs LF/CRLF handling */
+      UCHAR ch; // character buffer
       int c; /* Current character */
+
       for (k->zincnt = 0; (k->zincnt < (k->zinlen - 2)); (k->zincnt)++) {
-        if ((c = getc(ifile)) == EOF)
+        if (neo_file_eof(ichannel)) {
+          c = EOF;
           break;
+        }
+        (void)neo_file_read(ichannel, &ch, 1);
+        c = (int)ch;
         if (c == '\n')                     /* Have newline? */
           k->zinbuf[(k->zincnt)++] = '\r'; /* Insert CR */
         k->zinbuf[k->zincnt] = c;
@@ -376,16 +309,16 @@ int readfile(struct k_data *k) {
   return (*(k->zinptr)++ & 0xff);
 }
 
-/*  W R I T E F I L E  --  Write data to file  */
-/*
-  Call with:
-    Kermit struct
-    String pointer
-    Length
-  Returns:
-    X_OK on success
-    X_ERROR on failure, such as i/o error, space used up, etc
-*/
+// Write data to file
+// 
+// Call with:
+//   Kermit struct
+//   String pointer
+//   Length
+// Returns:
+//   X_OK on success
+//   X_ERROR on failure, such as i/o error, space used up, etc
+
 int writefile(struct k_data *k, UCHAR *s, int n) {
   int rc;
   rc = X_OK;
@@ -393,7 +326,7 @@ int writefile(struct k_data *k, UCHAR *s, int n) {
   debug(DB_LOG, "writefile binary", 0, k->binary);
 
   if (k->binary) { /* Binary mode, just write it */
-    if (write(ofile, s, n) != n)
+    if (neo_file_write(ochannel, s, n) != n)
       rc = X_ERROR;
   } else { /* Text mode, skip CRs */
     UCHAR *p, *q;
@@ -404,7 +337,7 @@ int writefile(struct k_data *k, UCHAR *s, int n) {
       for (p = q, i = 0; ((*p) && (*p != (UCHAR)13)); p++, i++)
         ;
       if (i > 0)
-        if (write(ofile, q, i) != i)
+        if (neo_file_write(ochannel, q, i) != i)
           rc = X_ERROR;
       if (!*p)
         break;
@@ -414,40 +347,34 @@ int writefile(struct k_data *k, UCHAR *s, int n) {
   return (rc);
 }
 
-/*  C L O S E F I L E  --  Close output file  */
-/*
-  Mode = 1 for input file, mode = 2 or 3 for output file.
+// Close output file
 
-  For output files, the character c is the character (if any) from the Z
-  packet data field.  If it is D, it means the file transfer was canceled
-  in midstream by the sender, and the file is therefore incomplete.  This
-  routine should check for that and decide what to do.  It should be
-  harmless to call this routine for a file that that is not open.
-*/
+//  Mode = 1 for input file, mode = 2 or 3 for output file.
+//
+//  For output files, the character c is the character (if any) from the Z
+//  packet data field.  If it is D, it means the file transfer was canceled
+//  in midstream by the sender, and the file is therefore incomplete.  This
+//  routine should check for that and decide what to do.  It should be
+//  harmless to call this routine for a file that that is not open.
+
 int closefile(struct k_data *k, UCHAR c, int mode) {
   int rc = X_OK; /* Return code */
 
   switch (mode) {
   case 1:       /* Closing input file */
-    if (!ifile) /* If not not open */
-      break;    /* do nothing but succeed */
     debug(DB_LOG, "closefile (input)", k->filename, 0);
-    if (fclose(ifile) < 0)
-      rc = X_ERROR;
+    neo_file_close(ichannel);
     break;
   case 2: /* Closing output file */
   case 3:
-    if (ofile < 0) /* If not open */
-      break;       /* do nothing but succeed */
     debug(DB_LOG, "closefile (output) name", k->filename, 0);
     debug(DB_LOG, "closefile (output) keep", 0, k->ikeep);
-    if (close(ofile) < 0) { /* Try to close */
-      rc = X_ERROR;
-    } else if ((k->ikeep == 0) && /* Don't keep incomplete files */
-               (c == 'D')) {      /* This file was incomplete */
+    neo_file_close(ochannel);
+    if ((k->ikeep == 0) && /* Don't keep incomplete files */
+            (c == 'D')) {      /* This file was incomplete */
       if (k->filename) {
         debug(DB_LOG, "deleting incomplete", k->filename, 0);
-        unlink(k->filename); /* Delete it. */
+        neo_file_delete(k->filename); /* Delete it. */
       }
     }
     break;
