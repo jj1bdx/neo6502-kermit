@@ -90,6 +90,16 @@ void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
 
 // UART section
 
+#define SERIAL_PROTOCOL_8N1 (0)
+#define SERIAL_TRANSFER_BAUD_RATE (230400)
+
+// Initialize UART device.
+
+void devinit(void) {
+  neo_uext_uart_configure(SERIAL_TRANSFER_BAUD_RATE, SERIAL_PROTOCOL_8N1);
+  debug(DB_LOG, "Serial port speed", 0, (long)SERIAL_TRANSFER_BAUD_RATE);
+}
+
 // Read a Kermit packet from UART
 // Call with:
 //    k   - Kermit struct pointer
@@ -184,7 +194,7 @@ int tx_data(struct k_data *k, UCHAR *p, int n) {
   debug(DB_MSG, "tx_data write", 0, n);
   return (X_OK); /* Success */
 }
- 
+
 // Check if input waiting
 //
 // Check if input is waiting to be read, needed for sliding windows.
