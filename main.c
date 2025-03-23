@@ -45,16 +45,17 @@
 #include "debug.h"  /* Debugging */
 #include "kermit.h" /* Kermit symbols and data structures */
 
-#include <stdio.h>
 #include <neo/api.h>
+#include <stdio.h>
 
 // Prototypes of functions in neoio.c
 
-int readpkt(struct k_data *, UCHAR *, int); /* Communications i/o functions */
+void devinit(void);
+int readpkt(struct k_data *, UCHAR *, int);
 int tx_data(struct k_data *, UCHAR *, int);
 int inchk(struct k_data *);
 
-int openfile(struct k_data *, UCHAR *, int); /* File i/o functions */
+int openfile(struct k_data *, UCHAR *, int);
 int writefile(struct k_data *, UCHAR *, int);
 int readfile(struct k_data *);
 int closefile(struct k_data *, UCHAR, int);
@@ -73,7 +74,7 @@ struct k_response r; /* Kermit response structure */
 
 char **xargv;                 /* Global pointer to arg vector */
 UCHAR **cmlist = (UCHAR **)0; /* Pointer to file list */
-char *xname = "kermit.neo";           /* Default program name */
+char *xname = "kermit.neo";   /* Default program name */
 
 int action = 0;   /* Send or Receive */
 int xmode = 0;    /* File-transfer mode */
@@ -93,7 +94,7 @@ void doexit(int status) {
   devrestore(); /* Restore device */
   devclose();   /* Close device */
   exit(status); /* Exit with indicated status */
-#endif // COMMENT
+#endif          // COMMENT
 }
 
 void fatal(char *msg1, char *msg2, char *msg3) { /* Not to be called except */
@@ -119,23 +120,24 @@ int main(int argc, char **argv) {
 
   // Code starts here
 
-  neo_console_clear_screen();
-  printf("This is Neo6502-Kermit\n");
-
 #ifdef DEBUG
   debug(DB_OPN, "DEBUG enabled", 0, 0);
 #endif // DEBUG
 
+  neo_console_clear_screen();
+  printf("This is Neo6502-Kermit\n");
+  devinit();
+
   /*  Fill in parameters for this run */
 
-  k.xfermode = xmode;               /* Text/binary automatic/manual  */
-  k.remote = remote;                /* Remote vs local */
-  k.binary = 1;                     /* 0 = text, 1 = binary */
-  k.parity = parity;                /* Communications parity */
-  k.bct = 3;                        /* Block check type */
-  k.ikeep = keep;                   /* Keep incompletely received files */
-  k.filelist = cmlist;              /* List of files to send (if any) */
-  k.cancel = 0;                     /* Not canceled yet */
+  k.xfermode = xmode;  /* Text/binary automatic/manual  */
+  k.remote = remote;   /* Remote vs local */
+  k.binary = 1;        /* 0 = text, 1 = binary */
+  k.parity = parity;   /* Communications parity */
+  k.bct = 3;           /* Block check type */
+  k.ikeep = keep;      /* Keep incompletely received files */
+  k.filelist = cmlist; /* List of files to send (if any) */
+  k.cancel = 0;        /* Not canceled yet */
 
   /*  Fill in the i/o pointers  */
 
@@ -157,7 +159,7 @@ int main(int argc, char **argv) {
   k.writef = writefile; /* for writing to output file */
   k.closef = closefile; /* for closing files */
 #ifdef DEBUG
-  k.dbf = dodebug;      /* for debugging */
+  k.dbf = dodebug; /* for debugging */
 #else
   k.dbf = 0;
 #endif /* DEBUG */
@@ -223,9 +225,15 @@ int main(int argc, char **argv) {
         name, date, size, and bytes transferred so far.  These can be used in a
         file-transfer progress display, log, etc.
       */
-      
-      debug(DB_LOG, "NAME", (UCHAR *)(r.filename != (UCHAR *)(0) ? (char *)r.filename : "(NULL)"), 0);
-      debug(DB_LOG, "DATE", (UCHAR *)(r.filedate != (UCHAR *)(0) ? (char *)r.filedate : "(NULL)"), 0);
+
+      debug(
+          DB_LOG, "NAME",
+          (UCHAR *)(r.filename != (UCHAR *)(0) ? (char *)r.filename : "(NULL)"),
+          0);
+      debug(
+          DB_LOG, "DATE",
+          (UCHAR *)(r.filedate != (UCHAR *)(0) ? (char *)r.filedate : "(NULL)"),
+          0);
       debug(DB_LOG, "SIZE", 0, r.filesize);
       debug(DB_LOG, "STATE", 0, r.status);
       debug(DB_LOG, "SOFAR", 0, r.sofar);
