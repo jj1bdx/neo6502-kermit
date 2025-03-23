@@ -1,6 +1,10 @@
 # Neo6502-Kermit
 
-Based on E-Kermit v1.8
+## Objectives
+
+* File transfer only
+* No terminal emulation
+* Based on E-Kermit v1.8
 
 ## Kermit communication channel
 
@@ -8,14 +12,22 @@ Based on E-Kermit v1.8
 * Default speed: 230400bps
 * 8-bit, no parity
 
+## How to configure
+
+TBD
+
 ## Requirement
 
 * [LLVM-MOS SDK](https://github.com/llvm-mos/llvm-mos-sdk/)
 
 ## Current status
 
-*[x] Fix basic compilation errors
-*[x] Add Neo6502 I/O functions to neoio.c
+* [x] Fix basic compilation errors
+* [x] Add Neo6502 I/O functions to neoio.c
+* [x] Basic invocation test on emulator
+* [] Actual testing over baremetal UART
+* [] Program enhancement on file transfer
+* [] Debug logging on file
 
 ## License
 
