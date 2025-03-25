@@ -93,7 +93,7 @@ void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
 // UART section
 
 #define SERIAL_PROTOCOL_8N1 (0)
-#define SERIAL_TRANSFER_BAUD_RATE (230400)
+#define SERIAL_TRANSFER_BAUD_RATE (9600)
 
 // Initialize UART device.
 

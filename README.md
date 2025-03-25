@@ -16,7 +16,7 @@ I haven't made decisions on how this code should work.
 ## Kermit communication channel
 
 * Neo6502 UEXT UART
-* Default speed: 230400bps
+* Default speed: 9600 bps
 * 8-bit, no parity
 
 ## How to configure
