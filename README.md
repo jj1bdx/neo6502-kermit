@@ -18,10 +18,12 @@ I haven't made decisions on how this code should work.
 * Neo6502 UEXT UART
 * Default speed: 9600 bps
 * 8-bit, no parity
+* Tested with a Mac running USB serial device
 
 ## How to configure
 
-TBD
+* Details: TBD
+* see `ckermit-config.txt` for C-Kermit configuration example
 
 ## Requirement
 
@@ -39,4 +41,7 @@ TBD
 ## License
 
 Revised 3-Clause BSD License. See also [Revised 3-Clause BSD License for Columbia University Kermit Software](https://kermitproject.org/cu-bsd-license.html), which is consistent with the COPYING file of this repository.
+## Authors
 
+* E-Kermit: Frank da Cruz
+* Neo6502 configuration and I/O functions: Kenji Rikitake
