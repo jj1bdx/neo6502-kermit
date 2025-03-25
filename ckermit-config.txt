@@ -1,0 +1,5 @@
+set port /dev/cu.usbserial-DK0FK4MK
+set baud 9600
+set carrier-watch off
+robust
+set block 1
