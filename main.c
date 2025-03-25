@@ -76,12 +76,12 @@ char **xargv;                 /* Global pointer to arg vector */
 UCHAR **cmlist = (UCHAR **)0; /* Pointer to file list */
 char *xname = "kermit.neo";   /* Default program name */
 
-int action = 0;   /* Send or Receive */
-int xmode = 0;    /* File-transfer mode */
-int ftype = 1;    /* Global file type 0=text 1=binary*/
-int keep = 0;     /* Keep incompletely received files */
-short fmode = -1; /* Transfer mode for this file */
-int parity = 0;   /* Parity */
+int action = A_RECV; /* Send or Receive */
+int xmode = 1;       /* File-transfer mode */
+int ftype = 1;       /* Global file type 0=text 1=binary*/
+int keep = 0;        /* Keep incompletely received files */
+short fmode = -1;    /* Transfer mode for this file */
+int parity = 0;      /* Parity */
 #ifdef F_CRC
 int check = 3; /* Block check */
 #else
@@ -95,6 +95,12 @@ void doexit(int status) {
   devclose();   /* Close device */
   exit(status); /* Exit with indicated status */
 #endif          // COMMENT
+  printf("doexit status=%d\n", status);
+  puts("Press any key to restart");
+  int c;
+  c = getchar();
+  // Force system reset
+  neo_system_reset();
 }
 
 void fatal(char *msg1, char *msg2, char *msg3) { /* Not to be called except */
@@ -132,14 +138,14 @@ int main(int argc, char **argv) {
 
   /*  Fill in parameters for this run */
 
-  k.xfermode = xmode;  /* Text/binary automatic/manual  */
-  k.remote = remote;   /* Remote vs local */
-  k.binary = 1;        /* 0 = text, 1 = binary */
-  k.parity = parity;   /* Communications parity */
-  k.bct = 3;           /* Block check type */
-  k.ikeep = keep;      /* Keep incompletely received files */
-  k.filelist = cmlist; /* List of files to send (if any) */
-  k.cancel = 0;        /* Not canceled yet */
+  k.xfermode = xmode;               /* Text/binary automatic/manual  */
+  k.remote = remote;                /* Remote vs local */
+  k.binary = 1;                     /* 0 = text, 1 = binary */
+  k.parity = parity;                /* Communications parity */
+  k.bct = (check == 5) ? 3 : check; /* Block check type */
+  k.ikeep = keep;                   /* Keep incompletely received files */
+  k.filelist = cmlist;              /* List of files to send (if any) */
+  k.cancel = 0;                     /* Not canceled yet */
 
   /*  Fill in the i/o pointers  */
 
@@ -165,8 +171,8 @@ int main(int argc, char **argv) {
 #else
   k.dbf = 0;
 #endif /* DEBUG */
-  /* Force Type 3 Block Check (16-bit CRC) on all packets, or not */
-  k.bctf = 1;
+       /* Force Type 3 Block Check (16-bit CRC) on all packets, or not */
+  k.bctf = (check == 5) ? 1 : 0;
 
   /* Initialize Kermit protocol */
 
