@@ -143,6 +143,9 @@ int readpkt(struct k_data *k, UCHAR *p, int len, int fc) {
 #endif /* DEBUG */
 
   while (1) {
+    // Busy-wait required for UART receiving
+    while (!neo_uext_uart_available()) {
+    }
     x = neo_uext_uart_read();
     c = (k->parity) ? x & 0x7f : x & 0xff; /* Strip parity */
 
