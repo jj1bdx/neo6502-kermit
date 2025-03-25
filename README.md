@@ -1,5 +1,12 @@
 # Neo6502-Kermit
 
+## Alpha phase yet
+
+### Version 0.0.1
+
+While the protocol engine in kermit.c seems to be working OK,
+I haven't made decisions on how this code should work.
+
 ## Objectives
 
 * File transfer only
@@ -25,7 +32,7 @@ TBD
 * [x] Fix basic compilation errors
 * [x] Add Neo6502 I/O functions to neoio.c
 * [x] Basic invocation test on emulator
-* [ ] Actual testing over baremetal UART
+* [x] Actual testing over Neo6502 UEXT UART
 * [ ] Program enhancement on file transfer
 * [ ] Debug logging on file
 
