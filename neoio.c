@@ -38,6 +38,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <neo/api.h>
 
@@ -54,10 +55,27 @@ UCHAR i_buf[IBUFLEN + 8];
 #define CHANNEL_OUTPUT_FILE (2)
 
 // Debugging functions
-// TODO: Can output be a file?
+// Output written simultaneoutly to
+// Neo Console and file "KDEBUG.LOG"
 
 #ifdef DEBUG
+
+#define CHANNEL_DEBUG_OUTPUT (3)
+#define DBUFLEN (256)
+#define DEBUG_FILE "KDEBUG.LOG"
+
 static int xdebug = 0; /* Debugging on/off */
+static uint8_t dchannel = CHANNEL_DEBUG_OUTPUT;
+
+static char dbuf[DBUFLEN];
+
+void debugout(char *str) {
+  (void)neo_file_write(dchannel, str, strlen(str));
+  while (*str != '\0') {
+    putchar((int)*str);
+    str++;
+  }
+}
 
 void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
   if (fc != DB_OPN && !xdebug) {
@@ -69,25 +87,34 @@ void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
   switch (fc) { /* Function code */
   case DB_OPN:  /* Open debug log */
     xdebug = 1;
-    printf("DEBUG LOG OPEN\n");
+    neo_file_open(dchannel, (const char *)DEBUG_FILE,
+                  3); // truncate and read-write
+    snprintf(dbuf, DBUFLEN, "DEBUG LOG OPEN\n");
+    debugout(dbuf);
     return;
   case DB_MSG: /* Write a message */
-    printf("%s\n", label);
+    snprintf(dbuf, DBUFLEN, "%s\n", label);
+    debugout(dbuf);
     return;
   case DB_CHR: /* Write label and character */
-    printf("%s=[%c]\n", label, (char)nval);
+    snprintf(dbuf, DBUFLEN, "%s=[%c]\n", label, (char)nval);
+    debugout(dbuf);
     return;
   case DB_PKT: /* Log a packet */
                /* (fill in later, fall thru for now...) */
   case DB_LOG: /* Write label and string or number */
     if (sval) {
-      printf("%s[%s]\n", label, sval);
+      snprintf(dbuf, DBUFLEN, "%s[%s]\n", label, sval);
+      debugout(dbuf);
     } else {
-      printf("%s=%ld\n", label, nval);
+      snprintf(dbuf, DBUFLEN, "%s=%ld\n", label, nval);
+      debugout(dbuf);
     }
     return;
   case DB_CLS: /* Close debug log */
     xdebug = 0;
+    neo_file_close(dchannel);
+    return;
   }
 }
 #endif /* DEBUG */
