@@ -45,7 +45,9 @@
 #include "debug.h"  /* Debugging */
 #include "kermit.h" /* Kermit symbols and data structures */
 
+#include <kernel.h>
 #include <neo/api.h>
+
 #include <stdio.h>
 
 // Prototypes of functions in neoio.c
@@ -89,32 +91,24 @@ int check = 1;
 #endif          /* F_CRC */
 int remote = 1; /* 1 = Remote, 0 = Local */
 
+// Load BASIC and restart
+// TODO: should be declared with noreturn flag, but how?
+__attribute__((leaf)) void load_basic_and_restart(void) {
+  KSendMessageSync(API_GROUP_SYSTEM, API_FN_BASIC);
+  __attribute__((leaf)) asm volatile("jmp ($0000)" : : : "p");
+}
+
 void doexit(int status) {
-#ifdef COMMENT
-  devrestore(); /* Restore device */
-  devclose();   /* Close device */
-  exit(status); /* Exit with indicated status */
-#endif          // COMMENT
+#ifdef DEBUG
+  // Close debug log
+  debug(DB_CLS, "", 0, 0);
+#endif // DEBUG
   printf("doexit status=%d\n", status);
   puts("Press any key to restart");
   int c;
   c = getchar();
   // Force system reset
-  neo_system_reset();
-}
-
-void fatal(char *msg1, char *msg2, char *msg3) { /* Not to be called except */
-  if (msg1) {                                    /* from this module */
-    printf("%s: %s", xname, msg1);
-    if (msg2) {
-      printf("%s", msg2);
-    }
-    if (msg3) {
-      printf("%s", msg3);
-    }
-    printf("\n");
-  }
-  doexit(FAILURE);
+  load_basic_and_restart();
 }
 
 int main(int argc, char **argv) {
