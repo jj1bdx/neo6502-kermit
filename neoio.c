@@ -147,6 +147,7 @@ void devinit(void) {
 //   -1   - fatal error, such as loss of connection, or no buffer to read into.
 //
 // Timeout not implemented in this sample.
+// Maximum packet length to receive: k->r_maxlen
 
 int readpkt(struct k_data *k, UCHAR *p, int len) {
   int x, n, max;
@@ -209,7 +210,9 @@ int readpkt(struct k_data *k, UCHAR *p, int len) {
       return (n);
     } else {                   /* Contents of packet */
       if (n++ > k->r_maxlen) { /* Check length */
-        return (0);
+        // Too long packet is not correctable
+        debug(DB_MSG, "readpkt packet too long", 0, 0);
+        return (-1);
       } else {
         *p++ = x & 0xff;
       }
