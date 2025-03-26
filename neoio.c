@@ -148,7 +148,7 @@ void devinit(void) {
 //
 // Timeout not implemented in this sample.
 
-int readpkt(struct k_data *k, UCHAR *p, int len, int fc) {
+int readpkt(struct k_data *k, UCHAR *p, int len) {
   int x, n, max;
   short flag;
   UCHAR c;
