@@ -45,13 +45,15 @@
 #include "debug.h"
 #include "kermit.h"
 
-UCHAR o_buf[OBUFLEN + 8]; /* File output buffer */
-UCHAR i_buf[IBUFLEN + 8]; /* File output buffer */
+// File I/O buffers
+UCHAR o_buf[OBUFLEN + 8];
+UCHAR i_buf[IBUFLEN + 8];
 
+// File I/O channel IDs
 #define CHANNEL_INPUT_FILE (1)
 #define CHANNEL_OUTPUT_FILE (2)
 
-/* Debugging */
+// Debugging functions
 // TODO: Can output be a file?
 
 #ifdef DEBUG
@@ -145,6 +147,7 @@ int readpkt(struct k_data *k, UCHAR *p, int len, int fc) {
   while (1) {
     // Busy-wait required for UART receiving
     while (!neo_uext_uart_available()) {
+      // Maybe you can do something here
     }
     x = neo_uext_uart_read();
     c = (k->parity) ? x & 0x7f : x & 0xff; /* Strip parity */
