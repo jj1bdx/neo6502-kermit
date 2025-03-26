@@ -112,6 +112,8 @@ void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
     }
     return;
   case DB_CLS: /* Close debug log */
+    snprintf(dbuf, DBUFLEN, "DEBUG LOG CLOSE\n");
+    debugout(dbuf);
     xdebug = 0;
     neo_file_close(dchannel);
     return;
