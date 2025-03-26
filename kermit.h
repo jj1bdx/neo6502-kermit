@@ -67,7 +67,7 @@
 #ifdef NEO6502
 #define NO_SCAN /* We don't need F_SCAN, transparent file only */
 #define FN_MAX 16
-#define P_PKTLEN 256
+#define P_PKTLEN 512
 #endif /* NEO6502 */
 
 /* XAC compiler for Philips XAG30 microprocessor */
