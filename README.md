@@ -2,7 +2,7 @@
 
 ## Alpha phase yet
 
-### Version 0.0.3
+### Version 0.0.4
 
 While the protocol engine in kermit.c seems to be working OK,
 I haven't made decisions on how this code should work.
