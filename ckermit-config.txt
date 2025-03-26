@@ -1,5 +1,9 @@
 set port /dev/cu.usbserial-DK0FK4MK
 set baud 9600
 set carrier-watch off
-robust
-set block 1
+# No streaming
+set streaming off
+# This works OK
+set prefixing minimal
+# This is required to avoid type conversion
+set file type binary

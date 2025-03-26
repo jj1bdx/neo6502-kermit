@@ -65,14 +65,9 @@
 #define NEO6502
 
 #ifdef NEO6502
-#define NO_LP /* No long packets */
-#define NO_SSW
 #define NO_SCAN /* We don't need F_SCAN, transparent file only */
-// TODO: block type 3 doesn't work
-#define NO_CRC
 #define FN_MAX 16
-#define IBUFLEN 128
-#define OBUFLEN 512
+#define P_PKTLEN 512
 #endif /* NEO6502 */
 
 /* XAC compiler for Philips XAG30 microprocessor */
@@ -218,7 +213,12 @@
 #ifdef F_LP
 #define P_PKTLEN 4096
 #else
+#ifdef F_CRC
+// add 2 bytes to accomodate block check type 3
+#define P_PKTLEN 96
+#else
 #define P_PKTLEN 94
+#endif /* F_CRC */
 #endif /* F_LP */
 #endif /* P_PKTLEN */
 
