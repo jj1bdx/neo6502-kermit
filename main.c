@@ -222,7 +222,8 @@ int main(int argc, char **argv) {
     }
     /* Handle the input */
 
-    switch (status = kermit(K_RUN, &k, r_slot, rx_len, "", &r)) {
+    status = kermit(K_RUN, &k, r_slot, rx_len, "", &r);
+    switch (status) {
     case X_OK:
 #ifdef DEBUG
       /*
@@ -244,11 +245,12 @@ int main(int argc, char **argv) {
       debug(DB_LOG, "SOFAR", 0, r.sofar);
 #endif /* DEBUG */
       /* Maybe do other brief tasks here... */
-      continue; /* Keep looping */
+      break; /* Exit the switch statement and keep looping */
     case X_DONE:
       break; /* Finished */
     case X_ERROR:
       doexit(FAILURE); /* Failed */
+      // NOTREACHABLE
     }
   }
   doexit(SUCCESS);
