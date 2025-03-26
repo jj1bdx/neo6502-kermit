@@ -33,10 +33,14 @@ I haven't made decisions on how this code should work.
 
 * [x] Fix basic compilation errors
 * [x] Add Neo6502 I/O functions to neoio.c
-* [x] Basic invocation test on emulator
-* [x] Actual testing over Neo6502 UEXT UART
-* [ ] Program enhancement on file transfer
-* [ ] Debug logging on file
+* [x] Complete invocation test on emulator
+* [x] Perform actual communication testing over Neo6502 UEXT UART
+* [x] Make debug log available on file (KDEBUG.LOG)
+* [x] Test basic file receiving functions
+* [ ] Test file types (text/binary)
+* [ ] Error handling of filesystem open/read/write operations
+* [ ] Fix specification of the code (User interface)
+* [ ] Communication performance improvement
 
 ## License
 
