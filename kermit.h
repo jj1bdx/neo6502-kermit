@@ -68,11 +68,10 @@
 #define NO_LP /* No long packets */
 #define NO_SSW
 #define NO_SCAN /* We don't need F_SCAN, transparent file only */
-// TODO: block type 3 doesn't work
-#define NO_CRC
 #define FN_MAX 16
-#define IBUFLEN 128
-#define OBUFLEN 512
+#define P_PKTLEN 100 // This should include block checksums!
+#define IBUFLEN 256
+#define OBUFLEN 1024
 #endif /* NEO6502 */
 
 /* XAC compiler for Philips XAG30 microprocessor */
