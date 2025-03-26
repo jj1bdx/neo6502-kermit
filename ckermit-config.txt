@@ -7,3 +7,6 @@ set streaming off
 set prefixing minimal
 # This is required to avoid type conversion
 set file type binary
+# Limit data rate
+set win 4
+set rec pack 128
