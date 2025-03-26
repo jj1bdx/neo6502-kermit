@@ -65,13 +65,13 @@
 #define NEO6502
 
 #ifdef NEO6502
-#define NO_LP     /* No long packets */
+#define NO_LP /* No long packets */
 #define NO_SSW
-#define NO_SCAN   /* We don't need F_SCAN, transparent file only */
+#define NO_SCAN /* We don't need F_SCAN, transparent file only */
 #define FN_MAX 16
 #define IBUFLEN 128
 #define OBUFLEN 512
-#endif            /* NEO6502 */
+#endif /* NEO6502 */
 
 /* XAC compiler for Philips XAG30 microprocessor */
 /* See http://www.columbia.edu/kermit/em-apex.html */
