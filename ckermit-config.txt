@@ -5,8 +5,11 @@ set carrier-watch off
 set streaming off
 # This works OK
 set prefixing minimal
-# This is required to avoid type conversion
+# This is required to avoid file type conversion
 set file type binary
+set file scan off
+set file patterns off
+set file text-patterns
 # Limit data rate
 set win 4
 set rec pack 128
