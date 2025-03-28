@@ -24,7 +24,22 @@ I haven't made decisions on how this code should work.
 
 * Details: TBD
 * see `ckermit-config.txt` for C-Kermit configuration example
-* Note well: do not set file type other than binary (no conversion)
+
+## Note well: do not set file type other than binary (no conversion)
+
+In Kermit Protocol, there is no practical way to disable or prevent text file CR/LF conversion from the recipient side, if the sender side wants to do so.
+
+For C-Kermit, you need to run all of the following commands to avoid doing text file conversion:
+
+```text
+# This is required to avoid file type conversion
+set file type binary
+set file scan off
+set file patterns off
+set file text-patterns
+```
+
+Also, the format of "Text Type File" on Neo6502 is undefined
 
 ## Requirement
 
