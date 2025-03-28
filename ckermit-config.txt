@@ -11,5 +11,4 @@ set file scan off
 set file patterns off
 set file text-patterns
 # Limit data rate
-set win 4
-set rec pack 128
+set rec pack 256
