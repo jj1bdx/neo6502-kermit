@@ -67,7 +67,7 @@
 #ifdef NEO6502
 #define NO_SCAN /* We don't need F_SCAN, transparent file only */
 #define FN_MAX 16
-#define P_PKTLEN 270 // Sufficient for 256-byte packets 
+#define P_PKTLEN 270 // Sufficient for 256-byte packets
 #define P_WSLOTS 8
 #endif /* NEO6502 */
 

@@ -303,11 +303,12 @@ int openfile(struct k_data *k, UCHAR *s, int mode) {
 //   Pointer to filename
 //   Pointer to buffer for date-time string (unused for Neo6502)
 //   Length of date-time string buffer (must be at least 18 bytes)
-//   Pointer to int file type:
+//   Pointer to int file type = always 1
 //      0: (Not implemented) Prevailing type is text.
 //      1: (Always) Prevailing type is binary.
-//   Transfer mode (0 = auto, 1 = manual):
-//      0: (Not implemented) Figure out whether file is text or binary and return type.
+//   Transfer mode (0 = auto, 1 = manual) = always 1
+//      0: (Not implemented)
+//         Figure out whether file is text or binary and return type.
 //      1: (Always) (nonzero) Don't try to figure out file type.
 // Returns:
 //   X_ERROR on failure.
