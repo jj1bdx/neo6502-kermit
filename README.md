@@ -1,5 +1,8 @@
 # Neo6502-Kermit
 
+* Kermit protocol program for OLIMEX Neo6502 board
+* Based on E-Kermit v1.8
+
 ## Alpha phase yet
 
 ### Version 0.0.5
@@ -11,7 +14,6 @@ I haven't made decisions on how this code should work.
 
 * File transfer only
 * No terminal emulation
-* Based on E-Kermit v1.8
 
 ## Kermit communication channel
 
@@ -19,6 +21,13 @@ I haven't made decisions on how this code should work.
 * Default speed: 9600 bps
 * 8-bit, no parity
 * Tested with a Mac running USB serial device
+
+### Communication performance
+
+Using 8 simulated sliding windows with 256-byte packets, minimal prefixing:
+
+* With `-DDEBUG`: ~300 bytes/sec (including the console and KDEBUG.LOG file outputs)
+* With `-NODEBUG` (no debug code): ~910 bytes/sec (almost full speed)
 
 ## How to configure
 
@@ -56,11 +65,13 @@ Also, the format of "Text Type File" on Neo6502 is undefined
 * [x] Describe *non-capability* of distinguishing file types (text/binary)
 * [ ] Error handling of filesystem open/read/write operations
 * [ ] Fix specification of the code (User interface)
+* [ ] Implement file *sending* functions
 * [ ] Communication performance improvement
 
 ## License
 
 Revised 3-Clause BSD License. See also [Revised 3-Clause BSD License for Columbia University Kermit Software](https://kermitproject.org/cu-bsd-license.html), which is consistent with the COPYING file of this repository.
+
 ## Authors
 
 * E-Kermit: Frank da Cruz
