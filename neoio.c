@@ -75,6 +75,10 @@ void debugout(char *str) {
     putchar((int)*str);
     str++;
   }
+  // Force-set Neo console foreground color to green
+  putchar(0x82);
+  // Force-set Neo console background color to black
+  putchar(0x98);
 }
 
 void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
@@ -100,6 +104,7 @@ void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
     snprintf(dbuf, DBUFLEN, "%s=[%c]\n", label, (char)nval);
     debugout(dbuf);
     return;
+  // TODO: for DB_PKT, we need to output a more decent string
   case DB_PKT: /* Log a packet */
                /* (fill in later, fall thru for now...) */
   case DB_LOG: /* Write label and string or number */
@@ -299,11 +304,11 @@ int openfile(struct k_data *k, UCHAR *s, int mode) {
 //   Pointer to buffer for date-time string (unused for Neo6502)
 //   Length of date-time string buffer (must be at least 18 bytes)
 //   Pointer to int file type:
-//      0: Prevailing type is text.
-//      1: Prevailing type is binary.
+//      0: (Not implemented) Prevailing type is text.
+//      1: (Always) Prevailing type is binary.
 //   Transfer mode (0 = auto, 1 = manual):
-//      0: Figure out whether file is text or binary and return type.
-//      1: (nonzero) Don't try to figure out file type.
+//      0: (Not implemented) Figure out whether file is text or binary and return type.
+//      1: (Always) (nonzero) Don't try to figure out file type.
 // Returns:
 //   X_ERROR on failure.
 //   0L or greater on success == file length.
@@ -323,13 +328,7 @@ fileinfo(struct k_data *k, UCHAR *filename, UCHAR *buf, int buflen, short *type,
     return (X_ERROR);
   }
   neo_file_stat((const char *)filename, &stat);
-
-#ifdef F_SCAN
-  if (!mode) { /* File type determination requested */
-    *type = 1; // always binary
-  }
-#endif /* F_SCAN */
-
+  *type = 1; // File type is always binary regardless of mode
   return ((ULONG)(stat.size));
 }
 
