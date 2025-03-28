@@ -2,7 +2,7 @@
 
 ## Alpha phase yet
 
-### Version 0.0.4
+### Version 0.0.5
 
 While the protocol engine in kermit.c seems to be working OK,
 I haven't made decisions on how this code should work.
@@ -24,6 +24,7 @@ I haven't made decisions on how this code should work.
 
 * Details: TBD
 * see `ckermit-config.txt` for C-Kermit configuration example
+* Note well: do not set file type other than binary (no conversion)
 
 ## Requirement
 
@@ -37,7 +38,7 @@ I haven't made decisions on how this code should work.
 * [x] Perform actual communication testing over Neo6502 UEXT UART
 * [x] Make debug log available on file (KDEBUG.LOG)
 * [x] Test basic file receiving functions
-* [ ] Test file types (text/binary)
+* [x] Describe *non-capability* of distinguishing file types (text/binary)
 * [ ] Error handling of filesystem open/read/write operations
 * [ ] Fix specification of the code (User interface)
 * [ ] Communication performance improvement
