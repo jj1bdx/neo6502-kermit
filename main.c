@@ -98,6 +98,8 @@ __attribute__((leaf)) void load_basic_and_restart(void) {
 }
 
 void doexit(int status) {
+  // Close all files
+  neo_file_close((uint8_t)0xff);
 #ifdef DEBUG
   // Close debug log
   debug(DB_CLS, "", 0, 0);
