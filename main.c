@@ -79,10 +79,9 @@ UCHAR **cmlist = (UCHAR **)0; /* Pointer to file list */
 char *xname = "kermit.neo";   /* Default program name */
 
 int action = A_RECV; /* Send or Receive */
-int xmode = 1;       /* File-transfer mode */
-int ftype = 1;       /* Global file type 0=text 1=binary*/
+int xmode = 0;       /* File-transfer mode (manual) */
+int ftype = 1;       /* Global file type 0=text 1=binary (always binary)*/
 int keep = 0;        /* Keep incompletely received files */
-short fmode = -1;    /* Transfer mode for this file */
 int parity = 0;      /* Parity */
 #ifdef F_CRC
 int check = 3; /* Block check */
