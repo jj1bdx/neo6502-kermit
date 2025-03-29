@@ -1,16 +1,16 @@
 # Config parameters for Neo6502-Kermit
+# No streaming (unsupported)
+# Minimal prefixing
+# Disable file type conversion
+# Limit data rate by setting packet size
 define neo6502 {
 	set baud 9600
 	set carrier-watch off
-	# No streaming
 	set streaming off
-	# This works OK
 	set prefixing minimal
-	# This is required to avoid file type conversion
 	set file type binary
 	set file scan off
 	set file patterns off
 	set file text-patterns
-	# Limit data rate
 	set rec pack 256
 }
