@@ -96,9 +96,7 @@ void doexit(int status) {
   debug(DB_CLS, "", 0, 0);
 #endif // DEBUG
   printf("doexit status=%d\n", status);
-  puts("Press any key to restart");
-  int c;
-  c = getchar();
+  puts("Restart into NeoBasic");
   // Force system reset
   load_basic_and_restart();
 }
@@ -113,6 +111,7 @@ int main(int argc, char **argv) {
   char c;
   UCHAR *inbuf;
   short r_slot;
+  bool running = true;
 
   parity = P_PARITY; /* Set this to desired parity */
   status = X_OK;     /* Initial kermit status */
@@ -165,86 +164,99 @@ int main(int argc, char **argv) {
   // Force Type 3 Block Check (16-bit CRC) on all packets, or not
   k.bctf = (check == 5) ? 1 : 0;
 
-  // Initialize Kermit protocol
-  status = kermit(K_INIT, &k, 0, 0, "", &r);
+  // Toplevel loop for send/receive multiple files
+  while (running) {
+
+    // Initialize Kermit protocol
+    status = kermit(K_INIT, &k, 0, 0, "", &r);
 #ifdef DEBUG
-  debug(DB_LOG, "init status:", 0, status);
-  debug(DB_LOG, "E-Kermit version:", k.version, 0);
+    debug(DB_LOG, "init status:", 0, status);
+    debug(DB_LOG, "E-Kermit version:", k.version, 0);
 #endif /* DEBUG */
-  if (status == X_ERROR) {
-    doexit(FAILURE);
-  }
-  // Sending files start here
-  if (action == A_SEND) {
-    status = kermit(K_SEND, &k, 0, 0, "", &r);
-  }
-
-  // Now we read a packet ourselves and call Kermit with it.  Normally, Kermit
-  // would read its own packets, but in the embedded context, the device must be
-  // free to do other things while waiting for a packet to arrive.  So the real
-  // control program might dispatch to other types of tasks, of which Kermit is
-  // only one.  But in order to read a packet into Kermit's internal buffer, we
-  // have to ask for a buffer address and slot number.
-  // To interrupt a transfer in progress, set k.cancel to I_FILE to interrupt
-  // only the current file, or to I_GROUP to cancel the current file and all
-  // remaining files.  To cancel the whole operation in such a way that the
-  // both Kermits return an error status, call Kermit with K_ERROR.
-
-  while (status != X_DONE) {
-
-    // Here we block waiting for a packet to come in (unless readpkt times out).
-    // Another possibility would be to call inchk() to see if any bytes are
-    // waiting to be read, and if not, go do something else for a while, then
-    // come back here and check again.
-
-    inbuf = getrslot(&k, &r_slot);       /* Allocate a window slot */
-    rx_len = k.rxd(&k, inbuf, P_PKTLEN); /* Try to read a packet */
-    debug(DB_PKT, "main packet", &(k.ipktbuf[0][r_slot]), rx_len);
-
-    // For simplicity, kermit() ACKs the packet immediately after verifying it
-    // was received correctly.  If, afterwards, the control program fails to
-    // handle the data correctly (e.g. can't open file, can't write data, can't
-    // close file), then it tells Kermit to send an Error packet next time
-    // through the loop.
-
-    if (rx_len < 1) {        /* No data was read */
-      freerslot(&k, r_slot); /* So free the window slot */
-      if (rx_len < 0) {      /* If there was a fatal error */
-        doexit(FAILURE);     /* give up */
-      }
-      // This would be another place to dispatch to another task
-      // while waiting for a Kermit packet to show up.
+    if (status == X_ERROR) {
+      doexit(FAILURE);
     }
 
-    // Handle the input
+    // Sending files start here
+    if (action == A_SEND) {
+      status = kermit(K_SEND, &k, 0, 0, "", &r);
+    }
 
-    status = kermit(K_RUN, &k, r_slot, rx_len, "", &r);
-    switch (status) {
-    case X_OK:
+    // Now we read a packet ourselves and call Kermit with it.  Normally, Kermit
+    // would read its own packets, but in the embedded context, the device must
+    // be free to do other things while waiting for a packet to arrive.  So the
+    // real control program might dispatch to other types of tasks, of which
+    // Kermit is only one.  But in order to read a packet into Kermit's internal
+    // buffer, we have to ask for a buffer address and slot number. To interrupt
+    // a transfer in progress, set k.cancel to I_FILE to interrupt only the
+    // current file, or to I_GROUP to cancel the current file and all remaining
+    // files.  To cancel the whole operation in such a way that the both Kermits
+    // return an error status, call Kermit with K_ERROR.
+
+    while (status != X_DONE) {
+
+      // Here we block waiting for a packet to come in (unless readpkt times
+      // out). Another possibility would be to call inchk() to see if any bytes
+      // are waiting to be read, and if not, go do something else for a while,
+      // then come back here and check again.
+
+      inbuf = getrslot(&k, &r_slot);       /* Allocate a window slot */
+      rx_len = k.rxd(&k, inbuf, P_PKTLEN); /* Try to read a packet */
+      debug(DB_PKT, "main packet", &(k.ipktbuf[0][r_slot]), rx_len);
+
+      // For simplicity, kermit() ACKs the packet immediately after verifying it
+      // was received correctly.  If, afterwards, the control program fails to
+      // handle the data correctly (e.g. can't open file, can't write data,
+      // can't close file), then it tells Kermit to send an Error packet next
+      // time through the loop.
+
+      if (rx_len < 1) {        /* No data was read */
+        freerslot(&k, r_slot); /* So free the window slot */
+        if (rx_len < 0) {      /* If there was a fatal error */
+          doexit(FAILURE);     /* give up */
+        }
+        // This would be another place to dispatch to another task
+        // while waiting for a Kermit packet to show up.
+      }
+
+      // Handle the input
+
+      status = kermit(K_RUN, &k, r_slot, rx_len, "", &r);
+      switch (status) {
+      case X_OK:
 #ifdef DEBUG
-      // This shows how, after each packet, you get the protocol state, file
-      // name, date, size, and bytes transferred so far.  These can be used in a
-      // file-transfer progress display, log, etc.
-
-      debug(
-          DB_LOG, "NAME",
-          (UCHAR *)(r.filename != (UCHAR *)(0) ? (char *)r.filename : "(NULL)"),
-          0);
-      debug(
-          DB_LOG, "DATE",
-          (UCHAR *)(r.filedate != (UCHAR *)(0) ? (char *)r.filedate : "(NULL)"),
-          0);
-      debug(DB_LOG, "SIZE", 0, r.filesize);
-      debug(DB_LOG, "STATE", 0, r.status);
-      debug(DB_LOG, "SOFAR", 0, r.sofar);
+        // This shows how, after each packet, you get the protocol state, file
+        // name, date, size, and bytes transferred so far.  These can be used in
+        // a file-transfer progress display, log, etc.
+        debug(DB_LOG, "NAME",
+              (UCHAR *)(r.filename != (UCHAR *)(0) ? (char *)r.filename
+                                                   : "(NULL)"),
+              0);
+        debug(DB_LOG, "DATE",
+              (UCHAR *)(r.filedate != (UCHAR *)(0) ? (char *)r.filedate
+                                                   : "(NULL)"),
+              0);
+        debug(DB_LOG, "SIZE", 0, r.filesize);
+        debug(DB_LOG, "STATE", 0, r.status);
+        debug(DB_LOG, "SOFAR", 0, r.sofar);
 #endif /* DEBUG */
-      /* Maybe do other brief tasks here... */
-      break; /* Exit the switch statement and keep looping */
-    case X_DONE:
-      break; /* Finished */
-    case X_ERROR:
-      doexit(FAILURE); /* Failed */
-      // NOTREACHABLE
+        // Maybe do other brief tasks here...
+        break; // Exit the switch statement and keep looping
+      case X_DONE:
+#ifdef DEBUG
+        debug(DB_MSG, "Status X_DONE", 0, 0);
+#endif // DEBUG
+        puts("Kermit session completed");
+        break; /* Finished */
+      case X_ERROR:
+        doexit(FAILURE); /* Failed */
+        // NOTREACHABLE
+      }
+    }
+    puts("Press ^C to abort, other to continue");
+    c = getchar();
+    if (c == 0x03) {
+      running = false;
     }
   }
   doexit(SUCCESS);
