@@ -48,7 +48,7 @@ set file patterns off
 set file text-patterns
 ```
 
-Also, the format of "Text Type File" on Neo6502 is undefined
+Also, the format of "Text Type File" on Neo6502 is not clearly defined, although in the console code it seems to be CR-terminated, as shown in LLVM-MOS SDK.
 
 ## Requirement
 
@@ -70,7 +70,9 @@ Also, the format of "Text Type File" on Neo6502 is undefined
 
 ## License
 
-Revised 3-Clause BSD License. See also [Revised 3-Clause BSD License for Columbia University Kermit Software](https://kermitproject.org/cu-bsd-license.html), which is consistent with the COPYING file of this repository.
+Revised 3-Clause BSD License. See LICENSE.
+
+See also [Revised 3-Clause BSD License for Columbia University Kermit Software](https://kermitproject.org/cu-bsd-license.html).
 
 ## Authors
 

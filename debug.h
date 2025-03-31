@@ -1,3 +1,6 @@
+// This file is a part of Neo6502-Kermit.
+// See LICENSE for the licensing details.
+
 #include "cdefs.h"
 
 #ifndef NODEBUG /* NODEBUG inhibits debugging */

@@ -1,3 +1,6 @@
+// This file is a part of Neo6502-Kermit.
+// See LICENSE for the licensing details.
+
 #ifndef __CDEFS_H__
 #define __CDEFS_H__
 

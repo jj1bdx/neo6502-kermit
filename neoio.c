@@ -1,15 +1,11 @@
+// This file is a part of Neo6502-Kermit.
+// See LICENSE for the licensing details.
+
 // neoio.c
 // I/O routines of Neo6502 Kermit
 // Author: Kenji Rikitake
-// Copyright (C) 2025 by Kenji Rikitake.
-// This file follows BSD 3-Clause License.
-//
 // Based on unixio.c:
 // Author: Frank da Cruz.
-// Copyright (C) 1995, 2011.
-// Trustees of Columbia University in the City of New York.
-// All rights reserved.
-// See kermit.c for license.
 
 // Style: C99. It's 2025.
 
@@ -33,8 +29,6 @@
 // int readfile()
 // int writefile()
 // int closefile()
-
-// NOTE: stdio is unavailable on Neo6502!
 
 #include <stdint.h>
 #include <stdio.h>
