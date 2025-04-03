@@ -48,6 +48,10 @@ UCHAR i_buf[IBUFLEN + 8];
 #define CHANNEL_INPUT_FILE (1)
 #define CHANNEL_OUTPUT_FILE (2)
 
+// Prototypes in main.c
+// TODO: merge prototype to a new header
+void doexit(int status);
+
 // Debugging functions
 // Output written simultaneoutly to
 // Neo Console and file "KDEBUG.LOG"
@@ -65,6 +69,10 @@ static char dbuf[DBUFLEN];
 
 void debugout(char *str) {
   (void)neo_file_write(dchannel, str, strlen(str));
+  if (neo_api_error() != API_ERROR_NONE) {
+    puts("debugout: neo_file_write error");
+    doexit(FAILURE);
+  }
   while (*str != '\0') {
     putchar((int)*str);
     str++;
@@ -87,6 +95,10 @@ void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
     xdebug = 1;
     neo_file_open(dchannel, (const char *)DEBUG_FILE,
                   3); // truncate and read-write
+    if (neo_api_error() != API_ERROR_NONE) {
+      puts("dodebug: neo_file_open error");
+      doexit(FAILURE);
+    }
     snprintf(dbuf, DBUFLEN, "DEBUG LOG OPEN\n");
     debugout(dbuf);
     return;
@@ -268,21 +280,37 @@ static uint8_t ochannel = CHANNEL_OUTPUT_FILE;
 //    X_ERROR on failure, including rejection based on name, size, or date.
 
 int openfile(struct k_data *k, UCHAR *s, int mode) {
+  uint8_t error;
 
   switch (mode) {
   case 1:                                        /* Read */
     neo_file_open(ichannel, (const char *)s, 0); // read-only
-    k->s_first = 1;                              /* Set up for getkpt */
-    k->zinbuf[0] = '\0';                         /* Initialize buffer */
-    k->zinptr = k->zinbuf;                       /* Set up buffer pointer */
-    k->zincnt = 0;                               /* and count */
+    if ((error = neo_api_error()) != API_ERROR_NONE) {
+      debug(DB_LOG, "openfile: neo_file_open read error", s, 0);
+      debug(DB_LOG, "error code", 0, error);
+      return (X_ERROR);
+    }
+    k->s_first = 1;        /* Set up for getkpt */
+    k->zinbuf[0] = '\0';   /* Initialize buffer */
+    k->zinptr = k->zinbuf; /* Set up buffer pointer */
+    k->zincnt = 0;         /* and count */
     debug(DB_LOG, "openfile read ok", s, 0);
     return (X_OK);
 
   case 2:                                        /* Write (create) */
     neo_file_open(ochannel, (const char *)s, 3); // truncate and read-write
+    if ((error = neo_api_error()) != API_ERROR_NONE) {
+      debug(DB_LOG, "openfile: neo_file_open truncate error", s, 0);
+      debug(DB_LOG, "error code", 0, error);
+      return (X_ERROR);
+    }
     neo_file_close(ochannel);                    // close the file first
     neo_file_open(ochannel, (const char *)s, 1); // re-open for write-only
+    if ((error = neo_api_error()) != API_ERROR_NONE) {
+      debug(DB_LOG, "openfile: neo_file_open write error", s, 0);
+      debug(DB_LOG, "error code", 0, error);
+      return (X_ERROR);
+    }
     debug(DB_LOG, "openfile write ok", s, 0);
     return (X_OK);
 
@@ -314,6 +342,7 @@ ULONG
 fileinfo(struct k_data *k, UCHAR *filename, UCHAR *buf, int buflen, short *type,
          short mode) {
   neo_file_stat_t stat;
+  uint8_t error;
 
   if (!buf) {
     return (X_ERROR);
@@ -323,6 +352,11 @@ fileinfo(struct k_data *k, UCHAR *filename, UCHAR *buf, int buflen, short *type,
     return (X_ERROR);
   }
   neo_file_stat((const char *)filename, &stat);
+  if ((error = neo_api_error()) != API_ERROR_NONE) {
+    debug(DB_LOG, "fileinfo: neo_file_stat error", filename, 0);
+    debug(DB_LOG, "error code", 0, error);
+    return (X_ERROR);
+  }
   *type = 1; // File type is always binary regardless of mode
   return ((ULONG)(stat.size));
 }
@@ -330,6 +364,8 @@ fileinfo(struct k_data *k, UCHAR *filename, UCHAR *buf, int buflen, short *type,
 // Read data from a file
 
 int readfile(struct k_data *k) {
+  uint8_t error;
+
   if (!k->zinptr) {
 #ifdef DEBUG
     printf("readfile ZINPTR NOT SET\n");
@@ -340,6 +376,10 @@ int readfile(struct k_data *k) {
     if (k->binary) {   /* Binary - just read raw buffers */
       k->dummy = 0;
       k->zincnt = neo_file_read(ichannel, k->zinbuf, k->zinlen);
+      if ((error = neo_api_error()) != API_ERROR_NONE) {
+        debug(DB_LOG, "readfile: binary neo_file_read error, code", 0, error);
+        return (X_ERROR);
+      }
       debug(DB_LOG, "readfile binary ok zincnt", 0, k->zincnt);
 
     } else {    /* Text mode needs LF/CRLF handling */
@@ -351,6 +391,10 @@ int readfile(struct k_data *k) {
           break;
         }
         (void)neo_file_read(ichannel, &ch, 1);
+        if ((error = neo_api_error()) != API_ERROR_NONE) {
+          debug(DB_LOG, "readfile: text neo_file_read error", 0, error);
+          return (X_ERROR);
+        }
         c = (int)ch;
         if (c == '\n') {                   /* Have newline? */
           k->zinbuf[(k->zincnt)++] = '\r'; /* Insert CR */
@@ -387,12 +431,15 @@ int readfile(struct k_data *k) {
 
 int writefile(struct k_data *k, UCHAR *s, int n) {
   int rc;
+  uint8_t error;
   rc = X_OK;
 
   debug(DB_LOG, "writefile binary", 0, k->binary);
 
   if (k->binary) { /* Binary mode, just write it */
     if (neo_file_write(ochannel, s, n) != n) {
+      error = neo_api_error();
+      debug(DB_LOG, "writefile: binary neo_file_write error, code", 0, error);
       rc = X_ERROR;
     }
   } else { /* Text mode, skip CRs */
@@ -405,6 +452,8 @@ int writefile(struct k_data *k, UCHAR *s, int n) {
         ;
       if (i > 0) {
         if (neo_file_write(ochannel, q, i) != i) {
+          error = neo_api_error();
+          debug(DB_LOG, "writefile: text neo_file_write error, code", 0, error);
           rc = X_ERROR;
         }
       }
@@ -429,6 +478,7 @@ int writefile(struct k_data *k, UCHAR *s, int n) {
 
 int closefile(struct k_data *k, UCHAR c, int mode) {
   int rc = X_OK; /* Return code */
+  uint8_t error;
 
   switch (mode) {
   case 1: /* Closing input file */
@@ -445,6 +495,11 @@ int closefile(struct k_data *k, UCHAR c, int mode) {
       if (k->filename) {
         debug(DB_LOG, "deleting incomplete", k->filename, 0);
         neo_file_delete((const char *)k->filename); /* Delete it. */
+        if ((error = neo_api_error()) != API_ERROR_NONE) {
+          debug(DB_LOG, "closefile: neo_file_delete error", k->filename, 0);
+          debug(DB_LOG, "error code", 0, error);
+          rc = X_ERROR;
+        }
       }
     }
     break;
