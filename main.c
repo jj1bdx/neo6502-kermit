@@ -9,6 +9,7 @@
 // Macro definitions
 
 #define NEO6502_KERMIT_VERSION "v0.0.5"
+#define MAXSENDFILENUM (8)
 
 #include "cdefs.h"  // Data types for all modules
 #include "debug.h"  // Debugging
@@ -20,6 +21,7 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <string.h>
 
 // Prototypes of functions in neoio.c
 
@@ -45,16 +47,15 @@ extern int errno;
 struct k_data k;     /* Kermit data structure */
 struct k_response r; /* Kermit response structure */
 
-char **xargv;                 /* Global pointer to arg vector */
-UCHAR **cmlist = (UCHAR **)0; /* Pointer to file list */
-char *xname = "kermit.neo";   /* Default program name */
-
 // Load BASIC and restart
 // TODO: should be declared with noreturn flag, but how?
+
 __attribute__((leaf)) void load_basic_and_restart(void) {
   KSendMessageSync(API_GROUP_SYSTEM, API_FN_BASIC);
   __attribute__((leaf)) asm volatile("jmp ($0000)" : : : "p");
 }
+
+// Exit function for the program
 
 void doexit(int status) {
 #ifdef DEBUG
@@ -69,10 +70,14 @@ void doexit(int status) {
   load_basic_and_restart();
 }
 
+// Output the banner for startup
+
 void start_banner(void) {
   neo_console_clear_screen();
   printf("This is Neo6502-Kermit %s\n", NEO6502_KERMIT_VERSION);
 }
+
+// Main program
 
 int main(int argc, char **argv) {
   int rx_len, i, x;
@@ -88,6 +93,8 @@ int main(int argc, char **argv) {
 #else
   int check = 1;
 #endif /* F_CRC */
+  UCHAR sendfilelist[MAXSENDFILENUM][FN_MAX];
+  int sfnum = 0;
 
   // Code starts here
 
@@ -100,14 +107,24 @@ int main(int argc, char **argv) {
 
   // Parameters for this run
 
-  k.xfermode = 0;                   /* Text/binary manual  */
-  k.remote = 1;                     /* Remote */
-  k.binary = 1;                     /* 0 = text, 1 = binary */
-  k.parity = parity;                /* Communications parity */
-  k.bct = (check == 5) ? 3 : check; /* Block check type */
-  k.ikeep = 0;         /* Do not keep incompletely received files */
-  k.filelist = cmlist; /* List of files to send (if any) */
-  k.cancel = 0;        /* Not canceled yet */
+  // Manual mode transfer only
+  k.xfermode = 0;
+  // Remote mode
+  k.remote = 1;
+  // Binary mode transfer only
+  k.binary = 1;
+  // Set communications parity
+  k.parity = parity;
+  // Block check type
+  k.bct = (check == 5) ? 3 : check;
+  // Force Type 3 Block Check (16-bit CRC) on all packets, or not
+  k.bctf = (check == 5) ? 1 : 0;
+  // Do not keep incompletely received files
+  k.ikeep = 0;
+  // Not canceled yet
+  k.cancel = 0;
+  // List of files to send (if any)
+  k.filelist = (UCHAR **)sendfilelist;
 
   //  Fill in the i/o pointers
 
@@ -134,12 +151,13 @@ int main(int argc, char **argv) {
   k.dbf = 0;
 #endif /* DEBUG */
 
-  // Force Type 3 Block Check (16-bit CRC) on all packets, or not
-  k.bctf = (check == 5) ? 1 : 0;
-
   // Toplevel loop for send/receive multiple files
   while (running) {
 
+    // Clear sendfile list
+    for (i = 0; i < MAXSENDFILENUM; i++) {
+      sendfilelist[i][0] = '\0';
+    }
     // Prompting user for actions
     int cmd;
     printf("S)end, R)eceive, show D)irectory, or Q)uit? ");
@@ -153,17 +171,79 @@ int main(int argc, char **argv) {
 
     switch (cmd) {
     case 'S':
-      puts("Sending files (TBD)");
-      // Set filenames here
-      // action = A_SEND;
+      puts("Sending files");
+      action = A_NONE;
+      bool entering = true;
+      char name[FN_MAX];
+      int count = 0;
+      // TODO: is this channel ID OK?
+      uint8_t tchannel = 1;
+      uint8_t error;
+
+      while (entering) {
+        puts("Enter filename to send, '>' to finish, ^C to cancel");
+        if (fgets(name, FN_MAX, stdin) != NULL) {
+          int cmd = name[0];
+          if (cmd == '>') {
+            // Finish entering file names
+            // And continue to send
+            entering = false;
+            action = A_SEND;
+          } else if (cmd == 0x03) {
+            puts("Cancel sending files");
+            // Cancel sending
+            entering = false;
+            action = A_NONE;
+          } else {
+            // Test if file is readable
+            neo_file_open(tchannel, (const char *)name, 0);
+            if ((error = neo_api_error()) != API_ERROR_NONE) {
+              printf("Unable to open file %s\n", name);
+            } else {
+              neo_file_close(tchannel);
+              // File readable
+              // TODO: Is strlcpy() not in LLVM-MOS library?
+              strncpy((char *)sendfilelist[count], name, FN_MAX);
+              count++;
+              printf("Set File number %d to \"%s\"\n", count, name);
+            }
+          }
+          // Exit if exceeding the MAXSENDFILENUM
+          if (count >= MAXSENDFILENUM) {
+            printf("Number of files sent reached to maximum %d",
+                   MAXSENDFILENUM);
+            puts("No more entering filenames");
+            entering = false;
+            action = A_SEND;
+          }
+        }
+      }
+      if (action != A_NONE) {
+        printf("Press ^C or Q to cancel, others to continue:");
+        c = getchar();
+        if ((c == 0x03) || (toupper(c) == 'Q')) {
+          // Do nothing
+          puts("File sending canceled");
+          action = A_NONE;
+        } else {
+          // List sending files
+          int i;
+          for (i = 0; i < count; i++) {
+            printf("Sending file number %d: \"%s\"\n", i, sendfilelist[i]);
+          }
+          // Send files
+          action = A_SEND;
+        }
+      }
       break;
     // Receive files
     case 'R':
       puts("Waiting to receive files...");
       action = A_RECV;
       break;
-    // Show current directory
+    // Show current directory listing
     case 'D':
+      action = A_NONE;
       neo_file_list_directory();
       break;
     // Quit (Do nothing)
