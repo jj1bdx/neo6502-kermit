@@ -62,33 +62,38 @@ int lineinput(void) {
   linebuf[0] = '\0';
   do {
     c = getchar();
-    if (i < (LINELEN - 1)) {
-      if (isprint(c)) {
-        putchar(c);
-        linebuf[i] = (char)c;
-        i++;
-      } else if (c == 0x08) {
-        // backspace
-        putchar(c);
-        if (i > 0) {
-          linebuf[i] = '\0';
-          i--;
-        }
-      } else if (c == '\n') {
-        // line terminator, exit
-        putchar(c);
+    if (isprint(c)) {
+      putchar(c);
+      linebuf[i] = (char)c;
+      i++;
+    } else if (c == 0x08) {
+      // backspace
+      putchar(c);
+      if (i > 0) {
         linebuf[i] = '\0';
-        i++;
-      } else if (c == 0x03) {
-        // CTRL/C
-        // Remove all input
-        linebuf[0] = 0x03;
-        linebuf[1] = 0;
-        i = 1;
+        i--;
       }
+    } else if (c == '\n') {
+      // line terminator, exit
+      putchar(c);
+      linebuf[i] = '\0';
+      i++;
+    } else if (c == 0x03) {
+      // CTRL/C
+      // Remove all input
+      linebuf[0] = 0x03;
+      linebuf[1] = 0;
+      i = 1;
+    }
+    // If exceeding line width
+    if (i == LINELEN) {
+      // Rub out one letter
+      putchar(0x08);
+      linebuf[i] = '\0';
+      i--;
     }
   } while (c != '\n');
-  return i;
+  return i - 1;
 }
 
 // Load BASIC and restart
