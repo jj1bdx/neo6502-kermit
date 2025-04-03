@@ -3,15 +3,10 @@
 * Kermit protocol program for OLIMEX Neo6502 board
 * Based on E-Kermit v1.8
 
-## Alpha phase yet
+## Version 0.1.0
 
-### Version 0.0.5
-
-While the protocol engine in kermit.c seems to be working OK,
-I haven't made decisions on how this code should work.
-
-## Objectives
-
+* Still in alpha phase
+* Commands: send, receive, show directory, and quit
 * File transfer only
 * No terminal emulation
 
@@ -63,8 +58,9 @@ Also, the format of "Text Type File" on Neo6502 is not clearly defined, although
 * [x] Make debug log available on file (KDEBUG.LOG)
 * [x] Test basic file receiving functions
 * [x] Describe *non-capability* of distinguishing file types (text/binary)
-* [ ] Error handling of filesystem open/read/write operations
-* [ ] Fix specification of the code (User interface)
+* [x] Error handling of filesystem open/read/write operations
+* [x] Fix specification of the code (User interface)
+* [x] Implement UI for entering sending file names
 * [ ] Implement file *sending* functions
 * [ ] Communication performance improvement
 
