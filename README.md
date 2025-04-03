@@ -3,7 +3,7 @@
 * Kermit protocol program for OLIMEX Neo6502 board
 * Based on E-Kermit v1.8
 
-## Version 0.1.1
+## Version 0.1.2
 
 * Still in alpha phase
 * Commands: send, receive, show directory, and quit
@@ -61,8 +61,9 @@ Also, the format of "Text Type File" on Neo6502 is not clearly defined, although
 * [x] Error handling of filesystem open/read/write operations
 * [x] Fix specification of the code (User interface)
 * [x] Implement UI for entering sending file names
-* [ ] Implement file *sending* functions
-* [ ] Test basic file sending functions
+* [x] Implement file *sending* functions
+* [x] Test basic file sending functions
+* [ ] Fix more bugs (e.g., filesize stat)
 * [ ] Communication performance improvement
 
 ## License
