@@ -314,6 +314,8 @@ int main(int argc, char **argv) {
             for (i = 0; i < count; i++) {
               printf("Sending file number %d: \"%s\"\n", i, sendfilelist[i]);
             }
+            // Add a NULL pointer as the end of the list
+            sendfilelist[count] = (UCHAR *)0;
             puts("Sending file begins, set receiving program ready");
             // Send files
             action = A_SEND;
