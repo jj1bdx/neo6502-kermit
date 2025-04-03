@@ -141,11 +141,15 @@ int main(int argc, char **argv) {
   while (running) {
 
     // Prompting user for actions
+    int cmd;
     printf("S)end, R)eceive, show D)irectory, or Q)uit? ");
     c = getchar();
-    putchar(c);
+    cmd = toupper(c);
+    // Echo back if alphabet
+    if (isalpha(cmd)) {
+      putchar(cmd);
+    }
     putchar('\n');
-    int cmd = toupper(c);
 
     switch (cmd) {
     case 'S':
@@ -163,7 +167,9 @@ int main(int argc, char **argv) {
       neo_file_list_directory();
       break;
     // Quit (Do nothing)
+    // Also for CTRL/C
     case 'Q':
+    case 0x03:
       action = A_NONE;
       running = false;
       break;
