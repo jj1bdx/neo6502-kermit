@@ -47,6 +47,50 @@ extern int errno;
 struct k_data k;     /* Kermit data structure */
 struct k_response r; /* Kermit response structure */
 
+// Simple line input
+// This only accept CTRL/H and CTRL/C
+// for the control characters
+
+#define LINELEN (50)
+char linebuf[LINELEN];
+
+int lineinput(void) {
+  int c;
+  int i;
+
+  i = 0;
+  linebuf[0] = '\0';
+  do {
+    c = getchar();
+    if (i < (LINELEN - 1)) {
+      if (isprint(c)) {
+        putchar(c);
+        linebuf[i] = (char)c;
+        i++;
+      } else if (c == 0x08) {
+        // backspace
+        putchar(c);
+        if (i > 0) {
+          linebuf[i] = '\0';
+          i--;
+        }
+      } else if (c == '\n') {
+        // line terminator, exit
+        putchar(c);
+        linebuf[i] = '\0';
+        i++;
+      } else if (c == 0x03) {
+        // CTRL/C
+        // Remove all input
+        linebuf[0] = 0x03;
+        linebuf[1] = 0;
+        i = 1;
+      }
+    }
+  } while (c != '\n');
+  return i;
+}
+
 // Load BASIC and restart
 // TODO: should be declared with noreturn flag, but how?
 
@@ -181,8 +225,12 @@ int main(int argc, char **argv) {
       uint8_t error;
 
       while (entering) {
-        puts("Enter filename to send, '>' to finish, ^C to cancel");
-        if (fgets(name, FN_MAX, stdin) != NULL) {
+        puts("Enter filename to send, '>' to finish,\n"
+             "'.' to show directory, ^C to cancel");
+        int len;
+        len = lineinput();
+        if (len > 0) {
+          strncpy(name, linebuf, FN_MAX - 1);
           int cmd = name[0];
           if (cmd == '>') {
             // Finish entering file names
@@ -194,6 +242,9 @@ int main(int argc, char **argv) {
             // Cancel sending
             entering = false;
             action = A_NONE;
+          } else if (cmd == '.') {
+            // Show directory
+            neo_file_list_directory();
           } else {
             // Test if file is readable
             neo_file_open(tchannel, (const char *)name, 0);
@@ -227,6 +278,7 @@ int main(int argc, char **argv) {
           action = A_NONE;
         } else {
           // List sending files
+          printf("\nNumber of sending files: %d\n", count);
           int i;
           for (i = 0; i < count; i++) {
             printf("Sending file number %d: \"%s\"\n", i, sendfilelist[i]);
