@@ -23,6 +23,7 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 // Prototypes of functions in neoio.c
@@ -50,7 +51,7 @@ struct k_data k;     /* Kermit data structure */
 struct k_response r; /* Kermit response structure */
 
 // Sending filenames
-UCHAR sendfilelist[MAXSENDFILENUM + 1][FN_MAX];
+UCHAR *sendfilelist[MAXSENDFILENUM + 1];
 
 // Simple line input
 // This only accept CTRL/H and CTRL/C
@@ -88,7 +89,7 @@ int lineinput(void) {
       // Remove all input
       linebuf[0] = 0x03;
       linebuf[1] = 0;
-      i = 1;
+      i = 2;
       // exit immediately
       c = '\n';
     }
@@ -220,8 +221,14 @@ int main(int argc, char **argv) {
   // Toplevel loop for send/receive multiple files
   while (running) {
 
-    // Clear sendfile list
+    // Allocate and clear sendfile list
     for (i = 0; i <= MAXSENDFILENUM; i++) {
+      UCHAR *p = (UCHAR *)calloc(FN_MAX, sizeof(UCHAR));
+      if (p == NULL) {
+        debug(DB_MSG, "main: unable to calloc()", 0, 0);
+        doexit(FAILURE);
+      }
+      sendfilelist[i] = p;
       sendfilelist[i][0] = '\0';
     }
     // Prompting user for actions
@@ -277,8 +284,9 @@ int main(int argc, char **argv) {
               // File readable
               // TODO: Is strlcpy() not in LLVM-MOS library?
               strncpy((char *)sendfilelist[count], name, FN_MAX);
-              count++;
               printf("Set File number %d to \"%s\"\n", count, name);
+              printf("Name again: \"%s\"\n", sendfilelist[count]);
+              count++;
             }
           }
           // Exit if exceeding the MAXSENDFILENUM
