@@ -227,6 +227,7 @@
 
 /* Actions */
 
+#define A_NONE 0 /* Do nothing */
 #define A_SEND 1 /* Send file(s) */
 #define A_RECV 2 /* Receive file(s) */
 
