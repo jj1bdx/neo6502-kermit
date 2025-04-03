@@ -6,6 +6,8 @@
 // Based on E-Kermit 1.8 main.c
 // Author: Frank da Cruz, the Kermit Project, Columbia University, New York.
 
+// Note well: the stdio is assumed to be Neo6502 console device
+
 // Macro definitions
 
 #define NEO6502_KERMIT_VERSION "v0.1.0"
@@ -47,6 +49,9 @@ extern int errno;
 struct k_data k;     /* Kermit data structure */
 struct k_response r; /* Kermit response structure */
 
+// Sending filenames
+UCHAR sendfilelist[MAXSENDFILENUM + 1][FN_MAX];
+
 // Simple line input
 // This only accept CTRL/H and CTRL/C
 // for the control characters
@@ -84,6 +89,8 @@ int lineinput(void) {
       linebuf[0] = 0x03;
       linebuf[1] = 0;
       i = 1;
+      // exit immediately
+      c = '\n';
     }
     // If exceeding line width
     if (i == LINELEN) {
@@ -93,6 +100,7 @@ int lineinput(void) {
       i--;
     }
   } while (c != '\n');
+  // Return strlen(linebuf)
   return i - 1;
 }
 
@@ -133,16 +141,19 @@ int main(int argc, char **argv) {
   char c;
   UCHAR *inbuf;
   short r_slot;
+  // State of running main loop
   bool running = true;
-  int parity = P_PARITY; /* Set this to desired parity */
-  int status = X_OK;     /* Initial kermit status */
-  int action = A_NONE;   /* Send or Receive */
+  // Set this to desired parity
+  int parity = P_PARITY;
+  // Initial Kermit status
+  int status = X_OK;
+  int action = A_NONE;
+  // Block check
 #ifdef F_CRC
-  int check = 3; /* Block check */
+  int check = 3;
 #else
   int check = 1;
-#endif /* F_CRC */
-  UCHAR sendfilelist[MAXSENDFILENUM][FN_MAX];
+#endif // F_CRC
   int sfnum = 0;
 
   // Code starts here
@@ -204,7 +215,7 @@ int main(int argc, char **argv) {
   while (running) {
 
     // Clear sendfile list
-    for (i = 0; i < MAXSENDFILENUM; i++) {
+    for (i = 0; i <= MAXSENDFILENUM; i++) {
       sendfilelist[i][0] = '\0';
     }
     // Prompting user for actions
@@ -284,12 +295,18 @@ int main(int argc, char **argv) {
         } else {
           // List sending files
           printf("\nNumber of sending files: %d\n", count);
-          int i;
-          for (i = 0; i < count; i++) {
-            printf("Sending file number %d: \"%s\"\n", i, sendfilelist[i]);
+          if (count > 0) {
+            int i;
+            for (i = 0; i < count; i++) {
+              printf("Sending file number %d: \"%s\"\n", i, sendfilelist[i]);
+            }
+            puts("Sending file begins, set receiving program ready");
+            // Send files
+            action = A_SEND;
+          } else {
+            puts("No file to send");
+            action = A_NONE;
           }
-          // Send files
-          action = A_SEND;
         }
       }
       break;
@@ -329,7 +346,7 @@ int main(int argc, char **argv) {
         doexit(FAILURE);
       }
 
-      // Sending files start here
+      // Sending files starts here
       if (action == A_SEND) {
         status = kermit(K_SEND, &k, 0, 0, "", &r);
       }
@@ -352,6 +369,8 @@ int main(int argc, char **argv) {
         // out). Another possibility would be to call inchk() to see if any
         // bytes are waiting to be read, and if not, go do something else for a
         // while, then come back here and check again.
+
+        // TODO: add CTRL/C acceptance code here
 
         inbuf = getrslot(&k, &r_slot);       /* Allocate a window slot */
         rx_len = k.rxd(&k, inbuf, P_PKTLEN); /* Try to read a packet */
