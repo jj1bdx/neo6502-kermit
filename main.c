@@ -10,8 +10,8 @@
 
 // Macro definitions
 
-#define NEO6502_KERMIT_VERSION "v0.1.0"
-#define MAXSENDFILENUM (8)
+#define NEO6502_KERMIT_VERSION "v0.1.1"
+#define MAXSENDFILENUM (16)
 
 #include "cdefs.h"  // Data types for all modules
 #include "debug.h"  // Debugging

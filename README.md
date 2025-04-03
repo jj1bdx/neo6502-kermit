@@ -3,7 +3,7 @@
 * Kermit protocol program for OLIMEX Neo6502 board
 * Based on E-Kermit v1.8
 
-## Version 0.1.0
+## Version 0.1.1
 
 * Still in alpha phase
 * Commands: send, receive, show directory, and quit
