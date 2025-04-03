@@ -6,6 +6,8 @@
 // Based on E-Kermit 1.8 main.c
 // Author: Frank da Cruz, the Kermit Project, Columbia University, New York.
 
+// Macro definitions
+
 #define NEO6502_KERMIT_VERSION "v0.0.5"
 
 #include "cdefs.h"  // Data types for all modules
@@ -16,6 +18,7 @@
 #include <kernel.h>
 #include <neo/api.h>
 
+#include <ctype.h>
 #include <stdio.h>
 
 // Prototypes of functions in neoio.c
@@ -46,18 +49,6 @@ char **xargv;                 /* Global pointer to arg vector */
 UCHAR **cmlist = (UCHAR **)0; /* Pointer to file list */
 char *xname = "kermit.neo";   /* Default program name */
 
-int action = A_RECV; /* Send or Receive */
-int xmode = 0;       /* File-transfer mode (manual) */
-int ftype = 1;       /* Global file type 0=text 1=binary (always binary)*/
-int keep = 0;        /* Keep incompletely received files */
-int parity = 0;      /* Parity */
-#ifdef F_CRC
-int check = 3; /* Block check */
-#else
-int check = 1;
-#endif          /* F_CRC */
-int remote = 1; /* 1 = Remote, 0 = Local */
-
 // Load BASIC and restart
 // TODO: should be declared with noreturn flag, but how?
 __attribute__((leaf)) void load_basic_and_restart(void) {
@@ -66,12 +57,12 @@ __attribute__((leaf)) void load_basic_and_restart(void) {
 }
 
 void doexit(int status) {
-  // Close all files
-  neo_file_close((uint8_t)0xff);
 #ifdef DEBUG
   // Close debug log
   debug(DB_CLS, "", 0, 0);
 #endif // DEBUG
+  // Close all files
+  neo_file_close((uint8_t)0xff);
   printf("doexit status=%d\n", status);
   puts("Restart into NeoBasic");
   // Force system reset
@@ -84,14 +75,19 @@ void start_banner(void) {
 }
 
 int main(int argc, char **argv) {
-  int status, rx_len, i, x;
+  int rx_len, i, x;
   char c;
   UCHAR *inbuf;
   short r_slot;
   bool running = true;
-
-  parity = P_PARITY; /* Set this to desired parity */
-  status = X_OK;     /* Initial kermit status */
+  int parity = P_PARITY; /* Set this to desired parity */
+  int status = X_OK;     /* Initial kermit status */
+  int action = A_NONE;   /* Send or Receive */
+#ifdef F_CRC
+  int check = 3; /* Block check */
+#else
+  int check = 1;
+#endif /* F_CRC */
 
   // Code starts here
 
@@ -104,14 +100,14 @@ int main(int argc, char **argv) {
 
   // Parameters for this run
 
-  k.xfermode = xmode;               /* Text/binary automatic/manual  */
-  k.remote = remote;                /* Remote vs local */
+  k.xfermode = 0;                   /* Text/binary manual  */
+  k.remote = 1;                     /* Remote */
   k.binary = 1;                     /* 0 = text, 1 = binary */
   k.parity = parity;                /* Communications parity */
   k.bct = (check == 5) ? 3 : check; /* Block check type */
-  k.ikeep = keep;                   /* Keep incompletely received files */
-  k.filelist = cmlist;              /* List of files to send (if any) */
-  k.cancel = 0;                     /* Not canceled yet */
+  k.ikeep = 0;         /* Do not keep incompletely received files */
+  k.filelist = cmlist; /* List of files to send (if any) */
+  k.cancel = 0;        /* Not canceled yet */
 
   //  Fill in the i/o pointers
 
@@ -144,96 +140,129 @@ int main(int argc, char **argv) {
   // Toplevel loop for send/receive multiple files
   while (running) {
 
-    // Initialize Kermit protocol
-    status = kermit(K_INIT, &k, 0, 0, "", &r);
-#ifdef DEBUG
-    debug(DB_LOG, "init status:", 0, status);
-    debug(DB_LOG, "E-Kermit version:", k.version, 0);
-#endif /* DEBUG */
-    if (status == X_ERROR) {
-      doexit(FAILURE);
-    }
-
-    // Sending files start here
-    if (action == A_SEND) {
-      status = kermit(K_SEND, &k, 0, 0, "", &r);
-    }
-
-    // Now we read a packet ourselves and call Kermit with it.  Normally, Kermit
-    // would read its own packets, but in the embedded context, the device must
-    // be free to do other things while waiting for a packet to arrive.  So the
-    // real control program might dispatch to other types of tasks, of which
-    // Kermit is only one.  But in order to read a packet into Kermit's internal
-    // buffer, we have to ask for a buffer address and slot number. To interrupt
-    // a transfer in progress, set k.cancel to I_FILE to interrupt only the
-    // current file, or to I_GROUP to cancel the current file and all remaining
-    // files.  To cancel the whole operation in such a way that the both Kermits
-    // return an error status, call Kermit with K_ERROR.
-
-    while (status != X_DONE) {
-
-      // Here we block waiting for a packet to come in (unless readpkt times
-      // out). Another possibility would be to call inchk() to see if any bytes
-      // are waiting to be read, and if not, go do something else for a while,
-      // then come back here and check again.
-
-      inbuf = getrslot(&k, &r_slot);       /* Allocate a window slot */
-      rx_len = k.rxd(&k, inbuf, P_PKTLEN); /* Try to read a packet */
-      debug(DB_PKT, "main packet", &(k.ipktbuf[0][r_slot]), rx_len);
-
-      // For simplicity, kermit() ACKs the packet immediately after verifying it
-      // was received correctly.  If, afterwards, the control program fails to
-      // handle the data correctly (e.g. can't open file, can't write data,
-      // can't close file), then it tells Kermit to send an Error packet next
-      // time through the loop.
-
-      if (rx_len < 1) {        /* No data was read */
-        freerslot(&k, r_slot); /* So free the window slot */
-        if (rx_len < 0) {      /* If there was a fatal error */
-          doexit(FAILURE);     /* give up */
-        }
-        // This would be another place to dispatch to another task
-        // while waiting for a Kermit packet to show up.
-      }
-
-      // Handle the input
-
-      status = kermit(K_RUN, &k, r_slot, rx_len, "", &r);
-      switch (status) {
-      case X_OK:
-#ifdef DEBUG
-        // This shows how, after each packet, you get the protocol state, file
-        // name, date, size, and bytes transferred so far.  These can be used in
-        // a file-transfer progress display, log, etc.
-        debug(DB_LOG, "NAME",
-              (UCHAR *)(r.filename != (UCHAR *)(0) ? (char *)r.filename
-                                                   : "(NULL)"),
-              0);
-        debug(DB_LOG, "DATE",
-              (UCHAR *)(r.filedate != (UCHAR *)(0) ? (char *)r.filedate
-                                                   : "(NULL)"),
-              0);
-        debug(DB_LOG, "SIZE", 0, r.filesize);
-        debug(DB_LOG, "STATE", 0, r.status);
-        debug(DB_LOG, "SOFAR", 0, r.sofar);
-#endif /* DEBUG */
-        // Maybe do other brief tasks here...
-        break; // Exit the switch statement and keep looping
-      case X_DONE:
-#ifdef DEBUG
-        debug(DB_MSG, "Status X_DONE", 0, 0);
-#endif // DEBUG
-        puts("Kermit session completed");
-        break; /* Finished */
-      case X_ERROR:
-        doexit(FAILURE); /* Failed */
-        // NOTREACHABLE
-      }
-    }
-    puts("Press ^C to abort, other to continue");
+    // Prompting user for actions
+    printf("S)end, R)eceive, show D)irectory, or Q)uit? ");
     c = getchar();
-    if (c == 0x03) {
+    putchar(c);
+    putchar('\n');
+    int cmd = toupper(c);
+
+    switch (cmd) {
+    case 'S':
+      puts("Sending files (TBD)");
+      // Set filenames here
+      // action = A_SEND;
+      break;
+    // Receive files
+    case 'R':
+      puts("Waiting to receive files...");
+      action = A_RECV;
+      break;
+    // Show current directory
+    case 'D':
+      neo_file_list_directory();
+      break;
+    // Quit (Do nothing)
+    case 'Q':
+      action = A_NONE;
       running = false;
+      break;
+    default:
+      puts("Command not understood");
+      action = A_NONE;
+      break;
+    }
+
+    // Activate Kermit only if action is not A_NONE
+    if (action != A_NONE) {
+
+      // Initialize Kermit protocol
+      status = kermit(K_INIT, &k, 0, 0, "", &r);
+#ifdef DEBUG
+      debug(DB_LOG, "init status:", 0, status);
+      debug(DB_LOG, "E-Kermit version:", k.version, 0);
+#endif /* DEBUG */
+      if (status == X_ERROR) {
+        doexit(FAILURE);
+      }
+
+      // Sending files start here
+      if (action == A_SEND) {
+        status = kermit(K_SEND, &k, 0, 0, "", &r);
+      }
+
+      // Now we read a packet ourselves and call Kermit with it.  Normally,
+      // Kermit would read its own packets, but in the embedded context, the
+      // device must be free to do other things while waiting for a packet to
+      // arrive.  So the real control program might dispatch to other types of
+      // tasks, of which Kermit is only one.  But in order to read a packet into
+      // Kermit's internal buffer, we have to ask for a buffer address and slot
+      // number. To interrupt a transfer in progress, set k.cancel to I_FILE to
+      // interrupt only the current file, or to I_GROUP to cancel the current
+      // file and all remaining files.  To cancel the whole operation in such a
+      // way that the both Kermits return an error status, call Kermit with
+      // K_ERROR.
+
+      while (status != X_DONE) {
+
+        // Here we block waiting for a packet to come in (unless readpkt times
+        // out). Another possibility would be to call inchk() to see if any
+        // bytes are waiting to be read, and if not, go do something else for a
+        // while, then come back here and check again.
+
+        inbuf = getrslot(&k, &r_slot);       /* Allocate a window slot */
+        rx_len = k.rxd(&k, inbuf, P_PKTLEN); /* Try to read a packet */
+        debug(DB_PKT, "main packet", &(k.ipktbuf[0][r_slot]), rx_len);
+
+        // For simplicity, kermit() ACKs the packet immediately after verifying
+        // it was received correctly.  If, afterwards, the control program fails
+        // to handle the data correctly (e.g. can't open file, can't write data,
+        // can't close file), then it tells Kermit to send an Error packet next
+        // time through the loop.
+
+        if (rx_len < 1) {        /* No data was read */
+          freerslot(&k, r_slot); /* So free the window slot */
+          if (rx_len < 0) {      /* If there was a fatal error */
+            doexit(FAILURE);     /* give up */
+          }
+          // This would be another place to dispatch to another task
+          // while waiting for a Kermit packet to show up.
+        }
+
+        // Handle the input
+
+        status = kermit(K_RUN, &k, r_slot, rx_len, "", &r);
+        switch (status) {
+        case X_OK:
+#ifdef DEBUG
+          // This shows how, after each packet, you get the protocol state, file
+          // name, date, size, and bytes transferred so far.  These can be used
+          // in a file-transfer progress display, log, etc.
+          debug(DB_LOG, "NAME",
+                (UCHAR *)(r.filename != (UCHAR *)(0) ? (char *)r.filename
+                                                     : "(NULL)"),
+                0);
+          debug(DB_LOG, "DATE",
+                (UCHAR *)(r.filedate != (UCHAR *)(0) ? (char *)r.filedate
+                                                     : "(NULL)"),
+                0);
+          debug(DB_LOG, "SIZE", 0, r.filesize);
+          debug(DB_LOG, "STATE", 0, r.status);
+          debug(DB_LOG, "SOFAR", 0, r.sofar);
+#endif /* DEBUG */
+          // Maybe do other brief tasks here...
+          break; // Exit the switch statement and keep looping
+        case X_DONE:
+#ifdef DEBUG
+          debug(DB_MSG, "Status X_DONE", 0, 0);
+#endif // DEBUG
+          puts("Kermit session completed");
+          break; /* Finished */
+        case X_ERROR:
+          doexit(FAILURE); /* Failed */
+          // NOTREACHABLE
+        }
+      }
     }
   }
   doexit(SUCCESS);
