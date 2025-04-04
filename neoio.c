@@ -324,7 +324,7 @@ int openfile(struct k_data *k, UCHAR *s, int mode) {
 }
 
 // Get info about existing file.
-// TODO: this code does not return the right file size
+// NOTE: This code only returns file size info
 
 // Call with:
 //   Pointer to filename
