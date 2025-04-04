@@ -384,40 +384,17 @@ int readfile(struct k_data *k) {
 #endif /* DEBUG */
     return (X_ERROR);
   }
-  if (k->zincnt < 1) { /* Nothing in buffer - must refill */
-    if (k->binary) {   /* Binary - just read raw buffers */
-      k->dummy = 0;
-      k->zincnt = neo_file_read(ichannel, k->zinbuf, k->zinlen);
-      if ((error = neo_api_error()) != API_ERROR_NONE) {
-        debug(DB_LOG, "readfile: binary neo_file_read error, code", 0, error);
-        return (X_ERROR);
-      }
-      debug(DB_LOG, "readfile binary ok zincnt", 0, k->zincnt);
-
-    } else {    /* Text mode needs LF/CRLF handling */
-      UCHAR ch; // character buffer
-      int c;    /* Current character */
-
-      for (k->zincnt = 0; (k->zincnt < (k->zinlen - 2)); (k->zincnt)++) {
-        if (neo_file_eof(ichannel)) {
-          break;
-        }
-        (void)neo_file_read(ichannel, &ch, 1);
-        if ((error = neo_api_error()) != API_ERROR_NONE) {
-          debug(DB_LOG, "readfile: text neo_file_read error", 0, error);
-          return (X_ERROR);
-        }
-        c = (int)ch;
-        if (c == '\n') {                   /* Have newline? */
-          k->zinbuf[(k->zincnt)++] = '\r'; /* Insert CR */
-        }
-        k->zinbuf[k->zincnt] = c;
-      }
-#ifdef DEBUG
-      k->zinbuf[k->zincnt] = '\0';
-      debug(DB_LOG, "readfile text ok zincnt", 0, k->zincnt);
-#endif /* DEBUG */
+  if (k->zincnt < 1) {
+    // Nothing in buffer - must refill
+    // Binary mode only
+    // k->binary is ignored
+    k->dummy = 0;
+    k->zincnt = neo_file_read(ichannel, k->zinbuf, k->zinlen);
+    if ((error = neo_api_error()) != API_ERROR_NONE) {
+      debug(DB_LOG, "readfile: binary neo_file_read error, code", 0, error);
+      return (X_ERROR);
     }
+    debug(DB_LOG, "readfile binary ok zincnt", 0, k->zincnt);
     k->zinbuf[k->zincnt] = '\0'; /* Terminate. */
     if (k->zincnt == 0) {        /* Check for EOF */
       return (-1);
@@ -446,34 +423,14 @@ int writefile(struct k_data *k, UCHAR *s, int n) {
   uint8_t error;
   rc = X_OK;
 
-  debug(DB_LOG, "writefile binary", 0, k->binary);
-
-  if (k->binary) { /* Binary mode, just write it */
-    if (neo_file_write(ochannel, s, n) != n) {
-      error = neo_api_error();
-      debug(DB_LOG, "writefile: binary neo_file_write error, code", 0, error);
-      rc = X_ERROR;
-    }
-  } else { /* Text mode, skip CRs */
-    UCHAR *p, *q;
-    int i;
-    q = s;
-
-    while (1) {
-      for (p = q, i = 0; ((*p) && (*p != (UCHAR)13)); p++, i++)
-        ;
-      if (i > 0) {
-        if (neo_file_write(ochannel, q, i) != i) {
-          error = neo_api_error();
-          debug(DB_LOG, "writefile: text neo_file_write error, code", 0, error);
-          rc = X_ERROR;
-        }
-      }
-      if (!*p) {
-        break;
-      }
-      q = p + 1;
-    }
+  debug(DB_LOG, "writefile binary (no text)", 0, k->binary);
+  // Binary mode only
+  // k->binary is ignored
+  // Binary mode, just write it
+  if (neo_file_write(ochannel, s, n) != n) {
+    error = neo_api_error();
+    debug(DB_LOG, "writefile: binary neo_file_write error, code", 0, error);
+    rc = X_ERROR;
   }
   return (rc);
 }
