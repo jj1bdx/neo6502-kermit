@@ -33,6 +33,11 @@ Using 8 simulated sliding windows with 256-byte packets, minimal prefixing:
 * With `-DDEBUG`: ~300 bytes/sec (including the console and KDEBUG.LOG file outputs)
 * With `-NODEBUG` (no debug code): ~910 bytes/sec (almost full speed)
 
+### Transfer speed limitation
+
+* Practical upper limit of speed: 19200 bps
+* Receiving buffer overflow occurs >19200 bps
+
 ## How to configure
 
 * Details: TBD
