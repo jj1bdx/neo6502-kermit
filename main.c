@@ -107,12 +107,14 @@ int lineinput(void) {
 }
 
 // Load BASIC and restart
-// TODO: should be declared with noreturn flag, but how?
-
-__attribute__((leaf)) void load_basic_and_restart(void) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winvalid-noreturn"
+void load_basic_and_restart(void) __attribute__((leaf, noreturn));
+void load_basic_and_restart(void) {
   KSendMessageSync(API_GROUP_SYSTEM, API_FN_BASIC);
   __attribute__((leaf)) asm volatile("jmp ($0000)" : : : "p");
 }
+#pragma clang diagnostic pop
 
 // Exit function for the program
 
@@ -249,7 +251,7 @@ int main(int argc, char **argv) {
       bool entering;
       char name[FN_MAX];
       int count;
-      // TODO: is this channel ID OK?
+      // this channel ID is available here
       uint8_t tchannel = 1;
       uint8_t error;
 
@@ -289,7 +291,7 @@ int main(int argc, char **argv) {
             } else {
               neo_file_close(tchannel);
               // File readable
-              // TODO: Is strlcpy() not in LLVM-MOS library?
+              // strlcpy() is not in LLVM-MOS library
               strncpy((char *)sendfilelist[count], name, FN_MAX);
               printf("Set File number %d to \"%s\"\n", count, name);
               count++;
