@@ -3,12 +3,18 @@
 * Kermit protocol program for OLIMEX Neo6502 board
 * Based on E-Kermit v1.8
 
-## Version 0.1.2
+## Version 0.1.3
 
 * Still in alpha phase
 * Commands: send, receive, show directory, and quit
-* File transfer only
+* File transfer with the USB storage file system only
 * No terminal emulation
+
+### Limitations
+
+* Simulated sliding window protocol works on receiving only
+* Neo6502-Kermit will *truncate and rewrite* received files
+* Kermit binary (i.e., transparent) transfer only
 
 ## Kermit communication channel
 

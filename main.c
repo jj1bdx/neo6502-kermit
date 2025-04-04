@@ -10,7 +10,7 @@
 
 // Macro definitions
 
-#define NEO6502_KERMIT_VERSION "v0.1.2"
+#define NEO6502_KERMIT_VERSION "v0.1.3"
 
 #include "cdefs.h"  // Data types for all modules
 #include "debug.h"  // Debugging
@@ -123,7 +123,8 @@ void doexit(int status) {
 #endif // DEBUG
   // Close all files
   neo_file_close((uint8_t)0xff);
-  printf("doexit status=%d\n", status);
+  printf("\ndoexit status=%d\n", status);
+  puts("Neo6502-Kermit terminated");
   puts("Restart into NeoBasic");
   // Force system reset
   load_basic_and_restart();
@@ -318,10 +319,10 @@ int main(int argc, char **argv) {
         c = getchar();
         if ((c == 0x03) || (toupper(c) == 'Q')) {
           // Do nothing
-          puts("File sending canceled");
+          puts("\nFile sending canceled");
           action = A_NONE;
         } else {
-          puts("Sending file begins, set receiving program ready");
+          puts("\nSending file begins, set receiving program ready");
           // Send files
           action = A_SEND;
         }
@@ -371,25 +372,18 @@ int main(int argc, char **argv) {
         status = kermit(K_SEND, &k, 0, 0, "", &r);
       }
 
-      // Now we read a packet ourselves and call Kermit with it.  Normally,
-      // Kermit would read its own packets, but in the embedded context, the
-      // device must be free to do other things while waiting for a packet to
-      // arrive.  So the real control program might dispatch to other types of
-      // tasks, of which Kermit is only one.  But in order to read a packet into
-      // Kermit's internal buffer, we have to ask for a buffer address and slot
-      // number. To interrupt a transfer in progress, set k.cancel to I_FILE to
-      // interrupt only the current file, or to I_GROUP to cancel the current
-      // file and all remaining files.  To cancel the whole operation in such a
-      // way that the both Kermits return an error status, call Kermit with
-      // K_ERROR.
+      // Kermit protocol begins
+      // To interrupt a transfer in progress:
+      // * Set k.cancel to:
+      //   * I_FILE to interrupt only the current file
+      //   * I_GROUP to cancel the current file and all remaining files
+      // To cancel the whole operation
+      // in such a way that the both Kermits return an error status:
+      // call Kermit with K_ERROR.
 
       while (status != X_DONE) {
 
-        // Here we block waiting for a packet to come in (unless readpkt times
-        // out). Another possibility would be to call inchk() to see if any
-        // bytes are waiting to be read, and if not, go do something else for a
-        // while, then come back here and check again.
-
+        // Here we block waiting for a packet to come in.
         // TODO: add CTRL/C acceptance code here
 
         inbuf = getrslot(&k, &r_slot);       /* Allocate a window slot */
@@ -438,7 +432,7 @@ int main(int argc, char **argv) {
 #ifdef DEBUG
           debug(DB_MSG, "Status X_DONE", 0, 0);
 #endif // DEBUG
-          puts("Kermit session completed");
+          puts("\nKermit session completed");
           break; /* Finished */
         case X_ERROR:
           doexit(FAILURE); /* Failed */
