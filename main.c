@@ -22,7 +22,6 @@
 
 #include <ctype.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 // Prototypes of functions in neoio.c
@@ -51,6 +50,7 @@ struct k_response r; /* Kermit response structure */
 
 // Sending filenames
 #define MAXSENDFILENUM (16)
+UCHAR sendfilearea[MAXSENDFILENUM][FN_MAX];
 UCHAR *sendfilelist[MAXSENDFILENUM + 1];
 
 // Simple line input
@@ -173,13 +173,10 @@ int main(int argc, char **argv) {
   start_banner();
   devinit();
 
-  // Allocate sendfile list space
+  // Allocate sendfile list string pointers
   for (i = 0; i <= MAXSENDFILENUM; i++) {
-    UCHAR *p = (UCHAR *)calloc(FN_MAX, sizeof(UCHAR));
-    if (p == NULL) {
-      debug(DB_MSG, "main: unable to calloc()", 0, 0);
-      doexit(FAILURE);
-    }
+    UCHAR *p;
+    p = sendfilearea[i];
     sendfilelist[i] = p;
   }
 
@@ -248,7 +245,7 @@ int main(int argc, char **argv) {
     case 'S':
       puts("Sending files");
       action = A_NONE;
-      bool entering = true;
+      bool entering;
       char name[FN_MAX];
       int count;
       // TODO: is this channel ID OK?
@@ -261,6 +258,7 @@ int main(int argc, char **argv) {
       }
       count = 0;
 
+      entering = true;
       while (entering) {
         puts("Enter filename to send, '>' to finish,\n"
              "'.' to show directory, ^C to cancel");
@@ -307,31 +305,29 @@ int main(int argc, char **argv) {
           }
         }
       }
-      if (action != A_NONE) {
-        printf("Press ^C or Q to cancel, others to continue:");
+      if ((action != A_NONE) && (count > 0)) {
+        // List sending files
+        printf("\nNumber of sending files: %d\n", count);
+        int i;
+        for (i = 0; i < count; i++) {
+          printf("Sending file number %d: \"%s\"\n", i, sendfilelist[i]);
+        }
+        // Add a NULL pointer as the end of the list
+        sendfilelist[count] = (UCHAR *)0;
+        printf("Press ^C or Q to cancel, others to go:");
         c = getchar();
         if ((c == 0x03) || (toupper(c) == 'Q')) {
           // Do nothing
           puts("File sending canceled");
           action = A_NONE;
         } else {
-          // List sending files
-          printf("\nNumber of sending files: %d\n", count);
-          if (count > 0) {
-            int i;
-            for (i = 0; i < count; i++) {
-              printf("Sending file number %d: \"%s\"\n", i, sendfilelist[i]);
-            }
-            // Add a NULL pointer as the end of the list
-            sendfilelist[count] = (UCHAR *)0;
-            puts("Sending file begins, set receiving program ready");
-            // Send files
-            action = A_SEND;
-          } else {
-            puts("No file to send");
-            action = A_NONE;
-          }
+          puts("Sending file begins, set receiving program ready");
+          // Send files
+          action = A_SEND;
         }
+      } else {
+        puts("No file to send");
+        action = A_NONE;
       }
       break;
     // Receive files
