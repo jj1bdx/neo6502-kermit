@@ -47,6 +47,7 @@ UCHAR i_buf[IBUFLEN + 8];
 // File I/O channel IDs
 #define CHANNEL_INPUT_FILE (1)
 #define CHANNEL_OUTPUT_FILE (2)
+#define CHANNEL_FILE_SIZE (3)
 
 // Prototypes in main.c
 // TODO: merge prototype to a new header
@@ -58,7 +59,7 @@ void doexit(int status);
 
 #ifdef DEBUG
 
-#define CHANNEL_DEBUG_OUTPUT (3)
+#define CHANNEL_DEBUG_OUTPUT (4)
 #define DBUFLEN (256)
 #define DEBUG_FILE "KDEBUG.LOG"
 
@@ -268,6 +269,7 @@ int inchk(struct k_data *k) {
 
 static uint8_t ichannel = CHANNEL_INPUT_FILE;
 static uint8_t ochannel = CHANNEL_OUTPUT_FILE;
+static uint8_t schannel = CHANNEL_FILE_SIZE;
 
 // Open output file
 //  Call with:
@@ -322,6 +324,7 @@ int openfile(struct k_data *k, UCHAR *s, int mode) {
 }
 
 // Get info about existing file.
+// TODO: this code does not return the right file size
 
 // Call with:
 //   Pointer to filename
@@ -343,8 +346,8 @@ int openfile(struct k_data *k, UCHAR *s, int mode) {
 ULONG
 fileinfo(struct k_data *k, UCHAR *filename, UCHAR *buf, int buflen, short *type,
          short mode) {
-  neo_file_stat_t stat;
   uint8_t error;
+  uint32_t size;
 
   if (!buf) {
     return (X_ERROR);
@@ -353,14 +356,21 @@ fileinfo(struct k_data *k, UCHAR *filename, UCHAR *buf, int buflen, short *type,
   if (buflen < 18) {
     return (X_ERROR);
   }
-  neo_file_stat((const char *)filename, &stat);
+  neo_file_open(schannel, (const char *)filename, 0); // read-only
   if ((error = neo_api_error()) != API_ERROR_NONE) {
-    debug(DB_LOG, "fileinfo: neo_file_stat error", filename, 0);
+    debug(DB_LOG, "fileinfo: neo_file_open read error", filename, 0);
     debug(DB_LOG, "error code", 0, error);
     return (X_ERROR);
   }
+  size = neo_file_size(schannel);
+  if ((error = neo_api_error()) != API_ERROR_NONE) {
+    debug(DB_LOG, "fileinfo: neo_file_size error", 0, schannel);
+    debug(DB_LOG, "error code", 0, error);
+    return (X_ERROR);
+  }
+  neo_file_close(schannel);
   *type = 1; // File type is always binary regardless of mode
-  return ((ULONG)(stat.size));
+  return ((ULONG)(size));
 }
 
 // Read data from a file
