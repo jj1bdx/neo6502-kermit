@@ -3,7 +3,7 @@
 * Kermit protocol program for OLIMEX Neo6502 board
 * Based on E-Kermit v1.8
 
-## Version 0.1.3
+## Version 0.1.4
 
 * Still in alpha phase
 * Commands: send, receive, show directory, and quit
@@ -15,6 +15,9 @@
 * Simulated sliding window protocol works on receiving only
 * Neo6502-Kermit will *truncate and rewrite* received files
 * Kermit binary (i.e., transparent) transfer only
+* Packet size: 256 bytes
+* Simulated sliding window size: 8
+* File name length: 15 characters
 
 ## Kermit communication channel
 

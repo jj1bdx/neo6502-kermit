@@ -10,7 +10,7 @@
 
 // Macro definitions
 
-#define NEO6502_KERMIT_VERSION "v0.1.3"
+#define NEO6502_KERMIT_VERSION "v0.1.4"
 
 #include "cdefs.h"  // Data types for all modules
 #include "debug.h"  // Debugging
@@ -292,7 +292,6 @@ int main(int argc, char **argv) {
               // TODO: Is strlcpy() not in LLVM-MOS library?
               strncpy((char *)sendfilelist[count], name, FN_MAX);
               printf("Set File number %d to \"%s\"\n", count, name);
-              printf("Name again: \"%s\"\n", sendfilelist[count]);
               count++;
             }
           }
