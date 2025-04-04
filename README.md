@@ -77,8 +77,9 @@ Also, the format of "Text Type File" on Neo6502 is not clearly defined, although
 * [x] Implement UI for entering sending file names
 * [x] Implement file *sending* functions
 * [x] Test basic file sending functions
-* [ ] Fix more bugs (e.g., filesize stat)
-* [ ] Communication performance improvement
+* [x] Fix more bugs (e.g., filesize stat)
+* [x] Communication performance measurement
+* [ ] Write user manual and documentation
 
 ## License
 
