@@ -165,7 +165,6 @@ int main(int argc, char **argv) {
 #else
   int check = 1;
 #endif // F_CRC
-  int sfnum = 0;
 
   // Code starts here
 
