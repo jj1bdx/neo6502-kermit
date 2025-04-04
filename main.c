@@ -11,7 +11,6 @@
 // Macro definitions
 
 #define NEO6502_KERMIT_VERSION "v0.1.2"
-#define MAXSENDFILENUM (16)
 
 #include "cdefs.h"  // Data types for all modules
 #include "debug.h"  // Debugging
@@ -51,9 +50,11 @@ struct k_data k;     /* Kermit data structure */
 struct k_response r; /* Kermit response structure */
 
 // Sending filenames
+#define MAXSENDFILENUM (16)
 UCHAR *sendfilelist[MAXSENDFILENUM + 1];
 
 // Simple line input
+// Echoing back input (printables only)
 // This only accept CTRL/H and CTRL/C
 // for the control characters
 
@@ -88,7 +89,7 @@ int lineinput(void) {
       // CTRL/C
       // Remove all input
       linebuf[0] = 0x03;
-      linebuf[1] = 0;
+      linebuf[1] = '\0';
       i = 2;
       // exit immediately
       c = '\n';
@@ -172,65 +173,65 @@ int main(int argc, char **argv) {
   start_banner();
   devinit();
 
-  // Parameters for this run
-
-  // Manual mode transfer only
-  k.xfermode = 0;
-  // Remote mode
-  k.remote = 1;
-  // Binary mode transfer only
-  k.binary = 1;
-  // Set communications parity
-  k.parity = parity;
-  // Block check type
-  k.bct = (check == 5) ? 3 : check;
-  // Force Type 3 Block Check (16-bit CRC) on all packets, or not
-  k.bctf = (check == 5) ? 1 : 0;
-  // Do not keep incompletely received files
-  k.ikeep = 0;
-  // Not canceled yet
-  k.cancel = 0;
-  // List of files to send (if any)
-  k.filelist = (UCHAR **)sendfilelist;
-
-  //  Fill in the i/o pointers
-
-  k.zinbuf = i_buf;    /* File input buffer */
-  k.zinlen = IBUFLEN;  /* File input buffer length */
-  k.zincnt = 0;        /* File input buffer position */
-  k.obuf = o_buf;      /* File output buffer */
-  k.obuflen = OBUFLEN; /* File output buffer length */
-  k.obufpos = 0;       /* File output buffer position */
-
-  // Fill in function pointers
-
-  k.rxd = readpkt;      /* for reading packets */
-  k.txd = tx_data;      /* for sending packets */
-  k.ixd = inchk;        /* for checking connection */
-  k.openf = openfile;   /* for opening files */
-  k.finfo = fileinfo;   /* for getting file info */
-  k.readf = readfile;   /* for reading files */
-  k.writef = writefile; /* for writing to output file */
-  k.closef = closefile; /* for closing files */
-#ifdef DEBUG
-  k.dbf = dodebug; /* for debugging */
-#else
-  k.dbf = 0;
-#endif /* DEBUG */
+  // Allocate sendfile list space
+  for (i = 0; i <= MAXSENDFILENUM; i++) {
+    UCHAR *p = (UCHAR *)calloc(FN_MAX, sizeof(UCHAR));
+    if (p == NULL) {
+      debug(DB_MSG, "main: unable to calloc()", 0, 0);
+      doexit(FAILURE);
+    }
+    sendfilelist[i] = p;
+  }
 
   // Toplevel loop for send/receive multiple files
   while (running) {
 
-    // Allocate and clear sendfile list
-    for (i = 0; i <= MAXSENDFILENUM; i++) {
-      UCHAR *p = (UCHAR *)calloc(FN_MAX, sizeof(UCHAR));
-      if (p == NULL) {
-        debug(DB_MSG, "main: unable to calloc()", 0, 0);
-        doexit(FAILURE);
-      }
-      sendfilelist[i] = p;
-      sendfilelist[i][0] = '\0';
-    }
+    // Parameters for this run
+
+    // Manual mode transfer only
+    k.xfermode = 0;
+    // Remote mode
+    k.remote = 1;
+    // Binary mode transfer only
+    k.binary = 1;
+    // Set communications parity
+    k.parity = parity;
+    // Block check type
+    k.bct = (check == 5) ? 3 : check;
+    // Force Type 3 Block Check (16-bit CRC) on all packets, or not
+    k.bctf = (check == 5) ? 1 : 0;
+    // Do not keep incompletely received files
+    k.ikeep = 0;
+    // Not canceled yet
+    k.cancel = 0;
+    // List of files to send (if any)
+    k.filelist = (UCHAR **)sendfilelist;
+
+    //  Fill in the i/o pointers
+
+    k.zinbuf = i_buf;    /* File input buffer */
+    k.zinlen = IBUFLEN;  /* File input buffer length */
+    k.zincnt = 0;        /* File input buffer position */
+    k.obuf = o_buf;      /* File output buffer */
+    k.obuflen = OBUFLEN; /* File output buffer length */
+    k.obufpos = 0;       /* File output buffer position */
+
+    // Fill in function pointers
+
+    k.rxd = readpkt;      /* for reading packets */
+    k.txd = tx_data;      /* for sending packets */
+    k.ixd = inchk;        /* for checking connection */
+    k.openf = openfile;   /* for opening files */
+    k.finfo = fileinfo;   /* for getting file info */
+    k.readf = readfile;   /* for reading files */
+    k.writef = writefile; /* for writing to output file */
+    k.closef = closefile; /* for closing files */
+#ifdef DEBUG
+    k.dbf = dodebug; /* for debugging */
+#else
+    k.dbf = 0;
+#endif /* DEBUG */
+
     // Prompting user for actions
     int cmd;
     printf("S)end, R)eceive, show D)irectory, or Q)uit? ");
@@ -242,16 +243,23 @@ int main(int argc, char **argv) {
     }
     putchar('\n');
 
+    // Command switch
     switch (cmd) {
     case 'S':
       puts("Sending files");
       action = A_NONE;
       bool entering = true;
       char name[FN_MAX];
-      int count = 0;
+      int count;
       // TODO: is this channel ID OK?
       uint8_t tchannel = 1;
       uint8_t error;
+
+      // Clear sendfile list
+      for (i = 0; i <= MAXSENDFILENUM; i++) {
+        sendfilelist[i][0] = '\0';
+      }
+      count = 0;
 
       while (entering) {
         puts("Enter filename to send, '>' to finish,\n"
