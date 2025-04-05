@@ -10,7 +10,7 @@
 
 // Macro definitions
 
-#define NEO6502_KERMIT_VERSION "v0.1.5"
+#define NEO6502_KERMIT_VERSION "v0.1.6"
 
 #include "cdefs.h"  // Data types for all modules
 #include "debug.h"  // Debugging
