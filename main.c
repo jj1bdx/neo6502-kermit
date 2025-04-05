@@ -50,7 +50,7 @@ struct k_response r; /* Kermit response structure */
 
 // Sending filenames
 #define MAXSENDFILENUM (16)
-UCHAR sendfilearea[MAXSENDFILENUM][FN_MAX];
+UCHAR sendfilearea[MAXSENDFILENUM][FN_MAX + 1];
 UCHAR *sendfilelist[MAXSENDFILENUM + 1];
 
 // Simple line input
@@ -248,7 +248,7 @@ int main(int argc, char **argv) {
       puts("Sending files");
       action = A_NONE;
       bool entering;
-      char name[FN_MAX];
+      char name[FN_MAX + 1];
       int count;
       // this channel ID is available here
       uint8_t tchannel = 1;
@@ -268,6 +268,7 @@ int main(int argc, char **argv) {
         len = lineinput();
         if (len > 0) {
           strncpy(name, linebuf, FN_MAX);
+          name[FN_MAX] = '\0';
           int cmd = name[0];
           if (cmd == '>') {
             // Finish entering file names
@@ -290,8 +291,8 @@ int main(int argc, char **argv) {
             } else {
               neo_file_close(tchannel);
               // File readable
-              // strlcpy() is not in LLVM-MOS library
               strncpy((char *)sendfilelist[count], name, FN_MAX);
+              sendfilelist[count][FN_MAX] = '\0';
               printf("Set File number %d to \"%s\"\n", count, name);
               count++;
             }
