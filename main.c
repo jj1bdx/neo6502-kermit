@@ -152,25 +152,19 @@ int main(int argc, char **argv) {
   char c;
   UCHAR *inbuf;
   short r_slot;
-  // State of running main loop
-  bool running = true;
-  // Set this to desired parity
-  int parity = P_PARITY;
-  // Initial Kermit status
-  int status = X_OK;
-  int action = A_NONE;
-  // Block check
-#ifdef F_CRC
-  int check = 3;
-#else
-  int check = 1;
-#endif // F_CRC
+  bool running;
+  int parity;
+  int status;
+  int action;
+  int check;
 
   // Code starts here
 
 #ifdef DEBUG
   debug(DB_OPN, "DEBUG enabled", 0, 0);
 #endif // DEBUG
+
+  // Initialization
 
   start_banner();
   devinit();
@@ -181,6 +175,20 @@ int main(int argc, char **argv) {
     p = sendfilearea[i];
     sendfilelist[i] = p;
   }
+
+  // State of running main loop
+  running = true;
+  // Set this to desired parity
+  parity = P_PARITY;
+  // Initial Kermit status
+  status = X_OK;
+  action = A_NONE;
+  // Block check
+#ifdef F_CRC
+  check = 3;
+#else
+  check = 1;
+#endif // F_CRC
 
   // Toplevel loop for send/receive multiple files
   while (running) {
@@ -262,8 +270,8 @@ int main(int argc, char **argv) {
 
       entering = true;
       while (entering) {
-        puts("Enter filename to send, '>' to finish,\n"
-             "'.' to show directory, ^C to cancel");
+        puts("Filename+Return to send, '>'+Return to finish,\n"
+             "'.'+Return to show directory, ^C to cancel");
         int len;
         len = lineinput();
         if (len > 0) {
@@ -323,7 +331,7 @@ int main(int argc, char **argv) {
           puts("\nFile sending canceled");
           action = A_NONE;
         } else {
-          puts("\nSending file begins, set receiving program ready");
+          puts("\nSending file begins, start receiving program");
           // Send files
           action = A_SEND;
         }
