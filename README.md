@@ -3,9 +3,9 @@
 * Kermit protocol program for OLIMEX Neo6502 board
 * Based on E-Kermit v1.8
 
-## Version 0.1.6
+## Version 0.1.7
 
-* Still in alpha phase
+* In beta-release phase
 * Commands: send, receive, show directory, and quit
 * File transfer with the USB storage file system only
 * No terminal emulation
