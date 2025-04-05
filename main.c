@@ -125,7 +125,10 @@ void doexit(int status) {
 #endif // DEBUG
   // Close all files
   neo_file_close((uint8_t)0xff);
-  printf("\ndoexit status=%d\n", status);
+  // Print only if exit status is not 0
+  if (status != 0) {
+    printf("\ndoexit status=%d\n", status);
+  }
   puts("Neo6502-Kermit terminated");
   puts("Restart into NeoBasic");
   // Force system reset
