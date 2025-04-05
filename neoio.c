@@ -143,7 +143,7 @@ void dodebug(int fc, UCHAR *label, UCHAR *sval, long nval) {
 void devinit(void) {
   neo_uext_uart_configure(SERIAL_TRANSFER_BAUD_RATE, SERIAL_PROTOCOL_8N1);
   debug(DB_LOG, "Serial port speed", 0, (long)SERIAL_TRANSFER_BAUD_RATE);
-  printf("Serial port speed: %d\n", SERIAL_TRANSFER_BAUD_RATE);
+  printf("Serial port speed: %d bps\n", SERIAL_TRANSFER_BAUD_RATE);
 }
 
 // Read a Kermit packet from UART

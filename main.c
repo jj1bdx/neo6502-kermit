@@ -138,10 +138,11 @@ void start_banner(void) {
   neo_console_clear_screen();
   printf("This is Neo6502-Kermit %s\n", NEO6502_KERMIT_VERSION);
   puts("Copyright (c) 2025 Kenji Rikitake.");
-  puts("Distributed under BSD 3-clause license.");
+  puts("Distributed under Revised BSD 3-clause license.");
   puts("Based on E-Kermit 1.8:");
   puts("Copyright (C) 1995, 2021,");
-  puts("Trustees of Columbia University in the City of New York.");
+  puts("Trustees of Columbia University");
+  puts("in the City of New York.");
   puts("Open Source 3-clause BSD license since 2011.");
 }
 
