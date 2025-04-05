@@ -448,13 +448,16 @@ int main(int argc, char **argv) {
           case A_RECV:
             if ((r.status == R_FILE) && (r.filename[0] != '\0')) {
               // Receiving of a file completed
-              printf("File \"%s\" receiving completed\n", r.filename);
+              printf("\nFile \"%s\" receiving completed\n", r.filename);
               printf("File date info: %s\n", r.filedate);
-              printf("Size: %ld bytes", r.filesize);
+              printf("Size: %ld bytes\n", r.filesize);
             } else if ((r.status == R_ATTR) && (r.filedate[0] == '\0')) {
               // The name of receiving file is received
               // Waiting for the attribute packet
-              printf("File \"%s\" to be received:\n", r.filename);
+              printf("\nFile \"%s\" to be received:\n", r.filename);
+            } else {
+              // Put a character for the sign of receiving a packet
+              putchar('*');
             }
             break;
           default:
