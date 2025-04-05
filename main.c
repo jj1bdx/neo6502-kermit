@@ -75,8 +75,8 @@ int lineinput(void) {
       i++;
     } else if (c == 0x08) {
       // backspace
-      putchar(c);
       if (i > 0) {
+        putchar(c);
         linebuf[i] = '\0';
         i--;
       }
@@ -424,9 +424,8 @@ int main(int argc, char **argv) {
         switch (status) {
         case X_OK:
 #ifdef DEBUG
-          // This shows how, after each packet, you get the protocol state, file
-          // name, date, size, and bytes transferred so far.  These can be used
-          // in a file-transfer progress display, log, etc.
+          // After each packet, you get the protocol state, filename,
+          // date, size, and bytes transferred so far.
           debug(DB_LOG, "NAME",
                 (UCHAR *)(r.filename != (UCHAR *)(0) ? (char *)r.filename
                                                      : "(NULL)"),
@@ -439,6 +438,29 @@ int main(int argc, char **argv) {
           debug(DB_LOG, "STATE", 0, r.status);
           debug(DB_LOG, "SOFAR", 0, r.sofar);
 #endif /* DEBUG */
+          // Non-debug display of file states
+          switch (action) {
+          // Sending
+          case A_SEND:
+            // TBD
+            break;
+          // Receiving
+          case A_RECV:
+            if ((r.status == R_FILE) && (r.filename[0] != '\0')) {
+              // Receiving of a file completed
+              printf("File \"%s\" receiving completed\n", r.filename);
+              printf("File date info: %s\n", r.filedate);
+              printf("Size: %ld bytes", r.filesize);
+            } else if ((r.status == R_ATTR) && (r.filedate[0] == '\0')) {
+              // The name of receiving file is received
+              // Waiting for the attribute packet
+              printf("File \"%s\" to be received:\n", r.filename);
+            }
+            break;
+          default:
+            // NOTREACHED
+            break;
+          }
           // Maybe do other brief tasks here...
           break; // Exit the switch statement and keep looping
         case X_DONE:
