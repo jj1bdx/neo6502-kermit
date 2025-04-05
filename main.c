@@ -458,10 +458,16 @@ int main(int argc, char **argv) {
           // Receiving
           case A_RECV:
             if ((r.status == R_FILE) && (r.filename[0] != '\0')) {
-              // Receiving of a file completed
-              printf("\nFile \"%s\" receiving completed\n", r.filename);
-              printf("File date info: %s\n", r.filedate);
-              printf("Size: %ld bytes\n", r.filesize);
+              if (r.filesize == r.sofar) {
+                // Receiving of a file completed
+                printf("\nFile \"%s\" receiving completed\n", r.filename);
+                printf("File date info: %s\n", r.filedate);
+                printf("Size: %ld bytes\n", r.filesize);
+              } else {
+                // File reception canceled by sender
+                printf("\nFile \"%s\" receiving terminated, incomplete\n",
+                       r.filename);
+              }
             } else if ((r.status == R_ATTR) && (r.filedate[0] == '\0')) {
               // The name of receiving file is received
               // Waiting for the attribute packet
