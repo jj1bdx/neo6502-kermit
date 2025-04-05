@@ -272,9 +272,10 @@ int main(int argc, char **argv) {
       }
       count = 0;
 
+      puts("Enter filenames to send");
       entering = true;
       while (entering) {
-        puts("Filename+Return to send, '>'+Return to finish,\n"
+        puts("Filename+Return to add, '>'+Return to finish,\n"
              "'.'+Return to show directory, ^C to cancel");
         int len;
         len = lineinput();
