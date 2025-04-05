@@ -298,7 +298,6 @@ int openfile(struct k_data *k, UCHAR *s, int mode) {
     k->zinptr = k->zinbuf; /* Set up buffer pointer */
     k->zincnt = 0;         /* and count */
     debug(DB_LOG, "openfile read ok", s, 0);
-    printf("openfile read %s\n", s);
     return (X_OK);
 
   case 2:                                        /* Write (create) */
@@ -316,7 +315,6 @@ int openfile(struct k_data *k, UCHAR *s, int mode) {
       return (X_ERROR);
     }
     debug(DB_LOG, "openfile write ok", s, 0);
-    printf("openfile write %s\n", s);
     return (X_OK);
 
   default:
@@ -453,20 +451,17 @@ int closefile(struct k_data *k, UCHAR c, int mode) {
   switch (mode) {
   case 1: /* Closing input file */
     debug(DB_LOG, "closefile (input)", k->filename, 0);
-    printf("closefile (input) %s\n", k->filename);
     neo_file_close(ichannel);
     break;
   case 2: /* Closing output file */
   case 3:
     debug(DB_LOG, "closefile (output) name", k->filename, 0);
     debug(DB_LOG, "closefile (output) keep", 0, k->ikeep);
-    printf("closefile (output) %s\n", k->filename);
     neo_file_close(ochannel);
     if ((k->ikeep == 0) && /* Don't keep incomplete files */
         (c == 'D')) {      /* This file was incomplete */
       if (k->filename) {
         debug(DB_LOG, "deleting incomplete", k->filename, 0);
-        printf("closefile (delete incomplete) %s\n", k->filename);
         neo_file_delete((const char *)k->filename); /* Delete it. */
         if ((error = neo_api_error()) != API_ERROR_NONE) {
           debug(DB_LOG, "closefile: neo_file_delete error", k->filename, 0);
