@@ -267,7 +267,7 @@ int main(int argc, char **argv) {
         int len;
         len = lineinput();
         if (len > 0) {
-          strncpy(name, linebuf, FN_MAX - 1);
+          strncpy(name, linebuf, FN_MAX);
           int cmd = name[0];
           if (cmd == '>') {
             // Finish entering file names
