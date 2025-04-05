@@ -442,7 +442,17 @@ int main(int argc, char **argv) {
           switch (action) {
           // Sending
           case A_SEND:
-            // TBD
+            if (r.status == S_ATTR) {
+              // Start sending files
+              // File size obtained
+              printf("\nFile \"%s\" to send\n", r.filename);
+              printf("Size: %ld bytes\n", r.filesize);
+            } else if (r.status == S_EOF) {
+              printf("\nFile \"%s\" sending completed\n", r.filename);
+            } else {
+              // Put a character for the sign of sending a packet
+              putchar('>');
+            }
             break;
           // Receiving
           case A_RECV:
