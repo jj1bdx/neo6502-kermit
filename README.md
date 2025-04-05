@@ -3,7 +3,7 @@
 * Kermit protocol program for OLIMEX Neo6502 board
 * Based on E-Kermit v1.8
 
-## Version 0.1.4
+## Version 0.1.5
 
 * Still in alpha phase
 * Commands: send, receive, show directory, and quit
@@ -17,12 +17,12 @@
 * Kermit binary (i.e., transparent) transfer only
 * Packet size: 256 bytes
 * Simulated sliding window size: 8
-* File name length: 15 characters
+* File name length: 31 characters
 
 ## Kermit communication channel
 
 * Neo6502 UEXT UART
-* Default speed: 9600 bps
+* Speed: 9600 bps
 * 8-bit, no parity
 * Tested with a Mac running USB serial device
 
@@ -37,6 +37,7 @@ Using 8 simulated sliding windows with 256-byte packets, minimal prefixing:
 
 * Practical upper limit of speed: 19200 bps
 * Receiving buffer overflow occurs >19200 bps
+* Speed fixed to 9600 bps to allow margin
 
 ## How to configure
 
