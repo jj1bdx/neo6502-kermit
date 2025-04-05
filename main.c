@@ -306,7 +306,7 @@ int main(int argc, char **argv) {
               // File readable
               strncpy((char *)sendfilelist[count], name, FN_MAX);
               sendfilelist[count][FN_MAX] = '\0';
-              printf("Set File number %d to \"%s\"\n", count, name);
+              printf("Set File number %d to \"%s\"\n", count + 1, name);
               count++;
             }
           }
@@ -325,7 +325,7 @@ int main(int argc, char **argv) {
         printf("\nNumber of sending files: %d\n", count);
         int i;
         for (i = 0; i < count; i++) {
-          printf("Sending file number %d: \"%s\"\n", i, sendfilelist[i]);
+          printf("Sending file number %d: \"%s\"\n", i + 1, sendfilelist[i]);
         }
         // Add a NULL pointer as the end of the list
         sendfilelist[count] = (UCHAR *)0;
