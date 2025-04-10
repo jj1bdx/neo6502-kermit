@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
   devinit();
 
   // Allocate sendfile list string pointers
-  for (i = 0; i <= MAXSENDFILENUM; i++) {
+  for (i = 0; i < MAXSENDFILENUM; i++) {
     UCHAR *p;
     p = sendfilearea[i];
     sendfilelist[i] = p;
@@ -267,7 +267,7 @@ int main(int argc, char **argv) {
       uint8_t error;
 
       // Clear sendfile list
-      for (i = 0; i <= MAXSENDFILENUM; i++) {
+      for (i = 0; i < MAXSENDFILENUM; i++) {
         sendfilelist[i][0] = '\0';
       }
       count = 0;
@@ -327,7 +327,7 @@ int main(int argc, char **argv) {
         for (i = 0; i < count; i++) {
           printf("Sending file number %d: \"%s\"\n", i + 1, sendfilelist[i]);
         }
-        // Add a NULL pointer as the end of the list
+        // Add a NULL pointer to the end of the list
         sendfilelist[count] = (UCHAR *)0;
         printf("Press ^C or Q to cancel, others to go:");
         c = getchar();
