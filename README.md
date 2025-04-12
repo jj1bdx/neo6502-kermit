@@ -2,15 +2,16 @@
 
 * Kermit protocol program for OLIMEX Neo6502 board
 * Based on E-Kermit v1.8
-
-## Version 0.1.8
-
+* Version 0.1.9
 * In beta-release phase
-* Commands: send, receive, show directory, and quit
 * File transfer with the USB storage file system only
 * No terminal emulation
 
-### Limitations
+## Usage
+
+* Read [usage.md](usage.md) for how to use this program.
+
+## Limitations
 
 * Simulated sliding window protocol works on receiving only
 * Neo6502-Kermit will *truncate and rewrite* received files
@@ -41,7 +42,6 @@ Using 8 simulated sliding windows with 256-byte packets, minimal prefixing:
 
 ## How to configure
 
-* Details: TBD
 * see `ckermit-config.txt` for C-Kermit configuration example
 
 ## Note well: do not set file type other than binary (no conversion)
@@ -80,7 +80,7 @@ Also, the format of "Text Type File" on Neo6502 is not clearly defined, although
 * [x] Test basic file sending functions
 * [x] Fix more bugs (e.g., filesize stat)
 * [x] Communication performance measurement
-* [ ] Write user manual and documentation
+* [x] Write user manual and documentation
 
 ## License
 
