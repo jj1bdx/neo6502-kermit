@@ -8,8 +8,11 @@ LLVMPATH=${HOME}/bin/llvm-mos
 CC = ${LLVMPATH}/bin/mos-neo6502-clang
 INCLUDES = -I${LLVMPATH}/mos-platform/neo6502/include \
 	-I${LLVMPATH}/mos-platform/common/include
-# CFLAGS = -Os ${INCLUDES} -DNODEBUG
-CFLAGS = -Os ${INCLUDES} -DDEBUG
+DEBUG = -DNODEBUG
+#DEBUG = -DDEBUG
+# Do not use -fnonreentrant here!
+# (Sending file does not work)
+CFLAGS = -Os -flto ${INCLUDES} ${DEBUG}
 
 OBJS = main.o kermit.o neoio.o
 TARGET = kermit.neo
